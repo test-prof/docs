@@ -23,9 +23,18 @@
 </head>
 <body>
   <div id="app"></div>
+  <script src="../assets/docsify-namespaces.js"></script>
   <script>
     window.$docsify = {
-      name: '<div class="sidebar-logo"><img src="./assets/images/logo.svg" height="64px"><span class="sidebar-logo-title">TestProf</span></div>',
+      name: '<a class="app-name-link" data-nosearch href="/"><div class="sidebar-logo">' +
+              '<img src="./assets/images/logo.svg" height="64px">' +
+              '<span class="sidebar-logo-title">TestProf</span>' +
+            '</div></a>' +
+            '<select id="lang-selector" name="lang" class="sidebar-version-select">' +
+              '<option value="">English</value>' +
+              '<option value="ru">Русский</value>' +
+            '</select>',
+      nameLink: false,
       repo: 'https://github.com/test-prof/test-prof',
       loadSidebar: true,
       subMaxLevel: 3,
@@ -33,15 +42,30 @@
       auto2top: true,
       relativePath: true,
       alias: {
+        '/ru/.*_sidebar.md': 'https://raw.githubusercontent.com/test-prof/docs-ru/master/docs/_sidebar.md',
         '/.*/_sidebar.md': '/_sidebar.md',
         '/(profilers|recipes|misc)/(.*)': 'https://raw.githubusercontent.com/test-prof/test-prof/master/docs/$1/$2',
+        '/ru/(.*)': 'https://raw.githubusercontent.com/test-prof/docs-ru/master/docs/$1',
       },
+      fallbackLanguages: ['ru'],
       search: {
         paths: 'auto',
         namespace: 'test-prof',
         hideOtherSidebarContent: true,
         depth: 3
-      }
+      },
+      plugins:[
+        NamespacesPlugin.create({
+          namespaces: [
+            {
+              id: "lang",
+              values: ["ru"],
+              optional: true,
+              selector: "#lang-selector"
+            }
+          ]
+        })
+      ]
     }
   </script>
   <script src="assets/docsify.min.js"></script>

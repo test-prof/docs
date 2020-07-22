@@ -32,7 +32,7 @@ end
 You can also dynamically add artifacts/reports suffixes via `TEST_PROF_REPORT` env variable.
 It is useful if you're not using timestamps and want to generate multiple reports with different setups and compare them.
 
-For example, let's compare tests load time with and without `bootsnap` using [`stackprof`](./stack_prof.md):
+For example, let's compare tests load time with and without `bootsnap` using [`stackprof`](./profilers/stack_prof.md):
 
 ```sh
 # Generate first report using `-with-bootsnap` suffix

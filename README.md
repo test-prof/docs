@@ -2,7 +2,7 @@
 
 TestProf docs website driven by [`docsify`](https://docsify.js.org/#/).
 
-This repo only contains assets and general docs (not related to a particalar TestProf library).
+This repo only contains assets and general docs (not related to a particular TestProf library).
 
 ## Contributing
 
@@ -22,7 +22,7 @@ We try to keep our documentation both correct and _stylish_ using the following 
 - [mdl](https://github.com/markdownlint/markdownlint)—Markdown linter, Ruby edition.
 - [liche](https://github.com/raviqqe/liche)—links linter.
 - [forspell](https://github.com/kkuprikov/forspell)—spelling checker.
-- [rubocop]() with [rubocop-md]() and [standard]()—Ruby code snippets style checking.
+- RuboCop with [rubocop-md](https://github.com/rubocop-hq/rubocop-md) and [standard](https://github.com/testdouble/standard)—Ruby code snippets style checking.
 
 To run these tools locally we use [Lefthook](https://github.com/Arkweid/lefthook) (runs linters automatically for every commit).
 

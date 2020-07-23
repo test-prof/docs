@@ -138,6 +138,9 @@
           }
         }
 
+        // Make current namespace available to other plugins
+        vm.config.currentNamespace = currentNamespace;
+
         next(html);
       });
     }

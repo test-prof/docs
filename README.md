@@ -4,6 +4,8 @@ TestProf docs website driven by [`docsify`](https://docsify.js.org/#/).
 
 This repo only contains assets and general docs (not related to a particular TestProf library).
 
+Most of the documentation lives in [the main repo](https://github.com/test-prof/test-prof/master/docs).
+
 ## Contributing
 
 The quickest way to fix a typo or propose a small change is to use GitHub web interface (open a file, click on "Edit", create a PR).
@@ -14,6 +16,15 @@ If you want to propose a bigger change, you might want to use a common flow:
 1. Create a new branch (`git checkout -b feat/my-proposal`).
 1. Commit and push changes.
 1. Open new Pull Request.
+
+## Translations
+
+Each localization lives in its own repository:
+
+- Russian: [https://github.com/test-prof/docs-ru](https://github.com/test-prof/docs-ru)
+- Chinese: [https://github.com/test-prof/docs-zh-cn](https://github.com/test-prof/docs-zh-cn)
+
+See [the guide on working on translations](TRANSLATIONS.md).
 
 ### Linters
 

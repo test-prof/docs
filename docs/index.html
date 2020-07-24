@@ -23,7 +23,6 @@
 </head>
 <body>
   <div id="app"></div>
-  <script src="../assets/docsify-namespaces.js"></script>
   <script>
     window.$docsify = {
       name: '<a id="logo-link" class="app-name-link" data-nosearch href="/"><div class="sidebar-logo">' +
@@ -55,17 +54,15 @@
         depth: 3,
         pathNamespaces: /^(\/(ru|zh-cn))?/
       },
+      namespaces: [
+        {
+          id: "lang",
+          values: ["ru"],
+          optional: true,
+          selector: "#lang-selector"
+        }
+      ],
       plugins:[
-        NamespacesPlugin.create({
-          namespaces: [
-            {
-              id: "lang",
-              values: ["ru"],
-              optional: true,
-              selector: "#lang-selector"
-            }
-          ]
-        }),
         function(hook, vm) {
           hook.doneEach(function(){
             var appNameLink = Docsify.dom.find("#logo-link");
@@ -80,6 +77,7 @@
   </script>
   <script src="assets/docsify.min.js"></script>
   <script src="assets/docsify-search.js"></script>
+  <script src="//unpkg.com/docsify-namespaced/dist/docsify-namespaced.min.js"></script>
   <script src="assets/prism-ruby.min.js"></script>
 </body>
 </html>

@@ -30,8 +30,9 @@
               '<span class="sidebar-logo-title">TestProf</span>' +
             '</div></a>' +
             '<select id="lang-selector" name="lang" class="sidebar-version-select">' +
-              '<option value="">English</value>' +
-              '<option value="ru">Русский</value>' +
+              '<option value="">English</option>' +
+              '<option value="ru">Русский</option>' +
+              '<!--option value="zh-cn">中文</option-->' +
             '</select>',
       nameLink: false,
       repo: 'https://github.com/test-prof/test-prof',
@@ -41,12 +42,12 @@
       auto2top: true,
       relativePath: true,
       alias: {
-        '/ru/.*_sidebar.md': 'https://raw.githubusercontent.com/test-prof/docs-ru/master/docs/_sidebar.md',
+        '/(ru|zh-cn)/.*_sidebar.md': 'https://raw.githubusercontent.com/test-prof/docs-$1/master/docs/_sidebar.md',
         '/.*/_sidebar.md': 'https://raw.githubusercontent.com/test-prof/test-prof/master/docs/_sidebar.md',
-        '/ru/(.*)': 'https://raw.githubusercontent.com/test-prof/docs-ru/master/docs/$1',
+        '/(ru|zh-cn)/(.*)': 'https://raw.githubusercontent.com/test-prof/docs-$1/master/docs/$2',
         '/(.*)': 'https://raw.githubusercontent.com/test-prof/test-prof/master/docs/$1',
       },
-      fallbackLanguages: ['ru'],
+      fallbackLanguages: ['ru', 'zh-cn'],
       search: {
         paths: 'auto',
         namespace: 'test-prof',
@@ -57,7 +58,7 @@
       namespaces: [
         {
           id: "lang",
-          values: ["ru"],
+          values: ["ru", "zh-cn"],
           optional: true,
           selector: "#lang-selector"
         }

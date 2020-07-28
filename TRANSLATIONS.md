@@ -25,3 +25,17 @@ Note that the translated documentation should include pages not only from the `t
 
 The documentation website is configured to fallback to the default translation (English) in case a document for the specified locale is missing.
 Thus, it's possible to gradually introduce a localization.
+
+## Images / Assets
+
+We recommend loading assets from the main documentation (and not copy them across translations).
+
+However, Docsify tries to be smart and automatically update relative image sources in the markdown source. The only way to hack it around is to use plain html, e.g.:
+
+```md
+<!-- Original -->
+![TagProf UI](../assets/tag-prof.gif)
+
+<!-- Translation -->
+<img alt="TagProf UI" data-origin="/assets/tag-prof.gif" src="/assets/tag-prof.gif">
+```

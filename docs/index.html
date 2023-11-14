@@ -20,10 +20,26 @@
   <meta name="theme-color" content="#CB2028" />
   <link rel="stylesheet" href="assets/vue.min.css">
   <link rel="stylesheet" href="assets/styles.css">
+  <!-- Use a global var to define the router mode to be able to redefine it by injecting a script (e.g., on Netlify) -->
+  <script>window.DOCSIFY_ROUTER_MODE = "hash"</script>
 </head>
 <body>
   <div id="app"></div>
   <script>
+    if (window.DOCSIFY_ROUTER_MODE === "history"){
+      var clink = document.createElement("link")
+      clink.rel = "canonical"
+      document.getElementsByTagName("head")[0].appendChild(clink)
+    }
+
+    if(rhash = sessionStorage.getItem("__redirect_hash__")) {
+      if (window.DOCSIFY_ROUTER_MODE === "hash")
+        window.location.hash = rhash;
+      else
+        window.location.url = rhash;
+      sessionStorage.removeItem("__redirect_hash__");
+    }
+
     window.$docsify = {
       name: '<a id="logo-link" class="app-name-link" data-nosearch href="/"><div class="sidebar-logo">' +
               '<img src="./assets/images/logo.svg" height="64px">' +
@@ -38,6 +54,7 @@
       repo: 'https://github.com/test-prof/test-prof',
       loadSidebar: true,
       subMaxLevel: 3,
+      routerMode: window.DOCSIFY_ROUTER_MODE,
       ga: 'UA-104346673-4',
       auto2top: true,
       relativePath: true,
@@ -50,7 +67,7 @@
       fallbackLanguages: ['ru', 'zh-cn'],
       search: {
         paths: 'auto',
-        namespace: 'test-prof',
+        namespace: 'test-prof-'+window.DOCSIFY_ROUTER_MODE,
         hideOtherSidebarContent: true,
         depth: 3,
         pathNamespaces: /^(\/(ru|zh-cn))?/

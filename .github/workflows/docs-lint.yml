@@ -17,6 +17,5 @@ jobs:
     uses: anycable/github-actions/.github/workflows/docs-lint.yml@master
     with:
       mdl-path: "*.md"
-      rubocop: false
       forspell-args: "*.md"
       lychee-args: docs/* --exclude "(recipes|profilers|misc)/"

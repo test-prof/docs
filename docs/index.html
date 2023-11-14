@@ -17,7 +17,8 @@
   <meta name="twitter:creator" content="@palkan_tula" />
   <meta property="og:site_name" content="TestProf" />
   <meta name="keywords" content="ruby, rails, testing, profiling" />
-  <meta name="theme-color" content="#CB2028" />
+  <meta name="theme-color" content="#a088ad" />
+  <meta name="view-transition" content="same-origin" />
   <link rel="stylesheet" href="assets/vue.min.css">
   <link rel="stylesheet" href="assets/styles.css">
   <!-- Use a global var to define the router mode to be able to redefine it by injecting a script (e.g., on Netlify) -->
@@ -89,6 +90,31 @@
 
             appNameLink.href = vm.config.currentNamespace;
           });
+        },
+        function(hook, vm) {
+          hook.beforeEach(function(){
+            if (clink) {
+              clink.href = "https://test-prof.evilmartians.io" + vm.route.path
+            }
+          });
+        },
+        function(hook, vm) {
+          if (!TurboViewTransitions.shouldPerformTransition()) return;
+
+          hook.afterEach(function(html, next) {
+            let newEl = document.createElement("div");
+            newEl.innerHTML = html;
+
+            let oldEl = document.querySelector("section.content")
+
+            TurboViewTransitions.performTransition(oldEl, newEl, function() {
+              next(newEl.innerHTML);
+            },
+            {
+              transitionAttr: 'data-view-transition',
+              activeAttr: 'data-active-view-transition'
+            });
+          })
         }
       ]
     }
@@ -97,5 +123,6 @@
   <script src="assets/docsify-search.js"></script>
   <script src="//unpkg.com/docsify-namespaced/dist/docsify-namespaced.min.js"></script>
   <script src="assets/prism-ruby.min.js"></script>
+  <script src="/assets/turbo-view-transitions.js"></script>
 </body>
 </html>

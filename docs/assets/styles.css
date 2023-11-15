@@ -157,6 +157,17 @@ body .sidebar-toggle {
   padding: 0;
 }
 
+.sponsor-link {
+  display: inline-flex !important;
+  align-items: center;
+}
+
+.sponsor-badge {
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+  fill: var(--theme-color);
+}
+
 body .sidebar-toggle span {
   transition: all 0.3s linear;
   background-color: #111;

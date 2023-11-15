@@ -14,9 +14,3 @@ AllCops:
   DisplayCopNames: true
   SuggestExtensions: false
   TargetRubyVersion: 2.7
-
-Standard/SemanticBlocks:
-  Enabled: false
-
-Lint/DuplicateMethods:
-  Enabled: false

@@ -23,6 +23,7 @@ Each localization lives in its own repository:
 
 - Russian: [https://github.com/test-prof/docs-ru](https://github.com/test-prof/docs-ru)
 - Chinese: [https://github.com/test-prof/docs-zh-cn](https://github.com/test-prof/docs-zh-cn)
+- Japanese: [https://github.com/test-prof/docs-ja](https://github.com/test-prof/docs-ja)
 
 See [the guide on working on translations](TRANSLATIONS.md).
 

@@ -30,12 +30,8 @@ Thus, it's possible to gradually introduce a localization.
 
 We recommend loading assets from the main documentation (and not copy them across translations).
 
-However, Docsify tries to be smart and automatically update relative image sources in the markdown source. The only way to hack it around is to use plain html, e.g.:
+However, Docsify tries to be smart and automatically update relative image sources in the markdown source. The only way to hack it around is to use absolute URLs, e.g.:
 
 ```md
-<!-- Original -->
-![TagProf UI](../assets/tag-prof.gif)
-
-<!-- Translation -->
 <img alt="TagProf UI" data-origin="/assets/tag-prof.gif" src="/assets/tag-prof.gif">
 ```

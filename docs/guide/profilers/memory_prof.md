@@ -1,0 +1,89 @@
+# MemoryProf
+
+MemoryProf tracks memory usage during your test suite run, and can help to detect test examples and groups that cause memory spikes. Memory profiling supports the following metrics: RSS, allocations and GC time.
+
+Example output:
+
+```sh
+[TEST PROF INFO] MemoryProf results
+
+Final RSS: 673KB
+
+Top 5 groups (by RSS):
+
+AnswersController (./spec/controllers/answers_controller_spec.rb:3) – +80KB (13.50%)
+QuestionsController (./spec/controllers/questions_controller_spec.rb:3) – +32KB  (9.08%)
+CommentsController (./spec/controllers/comments_controller_spec.rb:3) – +16KB (3.27%)
+
+Top 5 examples (by RSS):
+
+destroys question (./spec/controllers/questions_controller_spec.rb:38) – +144KB (24.38%)
+change comments count (./spec/controllers/comments_controller_spec.rb:7) – +120KB (20.00%)
+change Votes count (./spec/shared_examples/controllers/voted_examples.rb:23) – +90KB (16.36%)
+change Votes count (./spec/shared_examples/controllers/voted_examples.rb:23) – +64KB (12.86%)
+fails (./spec/shared_examples/controllers/invalid_examples.rb:3) – +32KB (5.00%)
+```
+
+The output shows the amount of memory used by each example and top-level example group (typically, a test file).
+
+## Instructions
+
+To activate MemoryProf with:
+
+### RSpec
+
+Use `TEST_MEM_PROF` environment variable to set which metric to use:
+
+```sh
+TEST_MEM_PROF='rss' rspec ...
+TEST_MEM_PROF='alloc' rake rspec ...
+TEST_MEM_PROF='gc' rake rspec ...
+```
+
+### Minitest
+
+In Minitest 6+, you must first activate TestProf plugin by adding `Minitest.load :test_prof` in your test helper.
+
+Use `TEST_MEM_PROF` environment variable to set which metric to use:
+
+```sh
+TEST_MEM_PROF='rss' rake test
+TEST_MEM_PROF='alloc' rake test
+TEST_MEM_PROF='gc' rake test
+```
+
+or use CLI options as well:
+
+```sh
+# Run a specific file using CLI option
+ruby test/my_super_test.rb --mem-prof=rss
+
+# Show the list of possible options:
+ruby test/my_super_test.rb --help
+```
+
+## Configuration
+
+By default, MemoryProf tracks the top 5 examples and groups that use the largest amount of memory.
+You can set how many examples/groups to display with the option:
+
+```sh
+TEST_MEM_PROF='rss' TEST_MEM_PROF_COUNT=10 rspec ...
+```
+
+or with CLI options for Minitest:
+
+```sh
+# Run a specific file using CLI option
+ruby test/my_super_test.rb --mem-prof=rs --mem-prof-top-count=10
+```
+
+## Supported Ruby Engines & OS
+
+Currently the allocation mode is not supported for JRuby.
+
+Since RSS depends on the OS, MemoryProf uses different tools to retrieve it:
+
+* Linux – `/proc/$pid/statm` file,
+* macOS, Solaris, BSD – `ps`,
+* Windows – `Get-Process`, requires PowerShell to be installed.

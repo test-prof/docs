@@ -1,56 +1,42 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-const STEP = { flash: 1, fall: 2, stamp: 3, hop: 4 }
-const TIMELINE: Array<[number, number]> = [
-  [STEP.flash, 1000],
-  [STEP.fall, 2300],
-  [STEP.stamp, 3050],
-  [STEP.hop, 4050],
-]
-
-const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-const step = ref(0)
-let timers: number[] = []
-
-const clearTimers = () => {
-  timers.forEach((id) => window.clearTimeout(id))
-  timers = []
-}
-
-const play = () => {
-  clearTimers()
-  step.value = 0
-  if (prefersReducedMotion()) {
-    step.value = STEP.hop
-    return
-  }
-  TIMELINE.forEach(([value, at]) => {
-    timers.push(window.setTimeout(() => { step.value = value }, at))
-  })
-}
+const playing = ref(false)
+const play = () => { playing.value = true }
 
 const navStamp = () => document.querySelector('.VPNavBar .nav-soon')
-
-watch(step, (value) => navStamp()?.classList.toggle('hop', value >= STEP.hop))
-
-onMounted(play)
-
-const active = ref<string | null>(null)
-let activeTimer: number | undefined
-
-const highlight = (id: string) => {
-  active.value = id
-  window.clearTimeout(activeTimer)
-  activeTimer = window.setTimeout(() => { active.value = null }, 2400)
+const hopNavStamp = (event: AnimationEvent) => {
+  if (event.animationName.startsWith('hop')) navStamp()?.classList.add('hop')
 }
 
-onBeforeUnmount(() => {
-  clearTimers()
-  navStamp()?.classList.remove('hop')
-  window.clearTimeout(activeTimer)
+onMounted(() => {
+  if (document.visibilityState === 'visible') play()
+  else document.addEventListener('visibilitychange', play, { once: true })
 })
+
+onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', play)
+  navStamp()?.classList.remove('hop')
+})
+
+const active = ref<string | null>(null)
+
+const waitlist = ref<'idle' | 'sending' | 'done' | 'error'>('idle')
+
+const joinWaitlist = async (event: SubmitEvent) => {
+  const fields = [...new FormData(event.target as HTMLFormElement)].map(([name, value]) => [name, String(value)])
+  waitlist.value = 'sending'
+  try {
+    const response = await fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(fields).toString(),
+    })
+    waitlist.value = response.ok ? 'done' : 'error'
+  } catch {
+    waitlist.value = 'error'
+  }
+}
 
 const parts = [
   { id: 'instructions', kind: 'direction', title: 'Instructions', text: 'Profiles a test sample, checks fixes in batches, stops on guardrails. Runs cheap and unattended in CI.' },
@@ -94,19 +80,19 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
 <template>
   <div class="pro">
     <!-- Hero -->
-    <section class="hero">
+    <section class="hero" :class="{ playing }">
       <h1 class="visually-hidden">TestPro is coming soon</h1>
 
       <div class="stage">
         <span class="title" aria-hidden="true">
-          TestPro<span class="f" :class="{ fall: step >= STEP.fall, collapsed: step >= STEP.fall }">f</span>
-          <span class="soon" :class="{ stamped: step >= STEP.stamp, hopping: step >= STEP.hop }">
+          TestPro<span class="f">f</span>
+          <span class="soon" @animationstart="hopNavStamp">
             <span v-for="(letter, i) in 'SOON'" :key="i">{{ letter }}</span>
           </span>
         </span>
 
         <div class="blocks">
-          <div class="flash" :class="{ on: step >= STEP.flash }" aria-hidden="true">
+          <div class="flash" aria-hidden="true">
             <span class="band"></span>
             <span class="rays"></span>
             <span v-for="n in 6" :key="n" class="sparkle">✦</span>
@@ -114,24 +100,23 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
 
           <div v-for="row in rows" :key="row.name" class="row">
             <template v-if="row.kind !== 'verification'">
-              <span class="chip group pending" :class="{ dissolve: step >= STEP.flash }" aria-hidden="true">{{ row.name }}</span>
+              <span class="chip group pending" aria-hidden="true">{{ row.name }}</span>
               <span class="items">
                 <a
                   v-for="part in parts.filter((p) => p.kind === row.kind)"
                   :key="part.id"
                   class="chip item"
-                  :class="[`chip-${row.kind}`, { show: step >= STEP.flash }]"
+                  :class="`chip-${row.kind}`"
                   :href="`#${part.id}`"
-                  @click="highlight(part.id)"
+                  @click="active = part.id"
                 >{{ part.title }}</a>
               </span>
             </template>
             <a
               v-else
               class="chip group chip-verification swap"
-              :class="{ swapped: step >= STEP.flash }"
               href="#testprof"
-              @click="highlight('testprof')"
+              @click="active = 'testprof'"
             >
               <span class="swap-from" aria-hidden="true">{{ row.name }}</span>
               <span class="swap-to">TestProf</span>
@@ -140,17 +125,41 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
         </div>
       </div>
 
-      <button class="replay" type="button" @click="play"><span class="replay-icon" aria-hidden="true">&#x21bb;</span>Replay</button>
-
       <p class="tagline">
         <span>TestProf plus the secret sauce for AI agents.</span>
         <span>Your agent knows where to look and what to fix.</span>
         <span>Battle-tested profilers prove the speedup is real.</span>
       </p>
 
-      <div class="actions">
-        <a class="btn btn-brand" href="https://evilmartians.com/?utm_source=test-prof-pro#contact-us" target="_blank" rel="noopener">Talk to us</a>
-      </div>
+      <form
+        v-if="waitlist !== 'done'"
+        class="waitlist"
+        name="testpro-waitlist"
+        method="POST"
+        @submit.prevent="joinWaitlist"
+      >
+        <input type="hidden" name="form-name" value="testpro-waitlist" />
+        <p class="visually-hidden" aria-hidden="true">
+          <label>Leave this empty <input name="bot" tabindex="-1" autocomplete="off" /></label>
+        </p>
+        <label class="visually-hidden" for="waitlist-email">Email</label>
+        <input
+          id="waitlist-email"
+          class="waitlist-email"
+          type="email"
+          name="email"
+          required
+          autocomplete="email"
+          placeholder="you@example.com"
+        />
+        <button class="btn btn-brand" type="submit" :disabled="waitlist === 'sending'">Notify me</button>
+      </form>
+
+      <p class="waitlist-note" role="status">
+        <template v-if="waitlist === 'done'">Done. We'll email you when TestPro launches.</template>
+        <template v-else-if="waitlist === 'error'">Something went wrong. Please try again.</template>
+        <template v-else>Just one email at launch.</template>
+      </p>
     </section>
 
     <!-- Secret sauce -->
@@ -163,6 +172,7 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
             :key="part.id"
             class="part"
             :class="{ active: active === part.id }"
+            @animationend="active = null"
           >
             <span :id="part.id" class="part-anchor"></span>
             <div class="part-head">
@@ -218,6 +228,8 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
         <a href="/guide/getting_started">Documentation</a>
         <span class="sep">&middot;</span>
         <a href="https://evilmartians.com/?utm_source=test-prof" target="_blank" rel="noopener">Evil Martians</a>
+        <span class="sep">&middot;</span>
+        <a href="https://evilmartians.com/privacy" target="_blank" rel="noopener">Privacy policy</a>
       </p>
       <p class="footer-badge">
         <a href="https://evilmartians.com/?utm_source=test-prof" target="_blank" rel="noopener">
@@ -241,6 +253,10 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
 
 /* Hero */
 .hero {
+  --flash: 1s;
+  --fall: 2.3s;
+  --stamp: 3.05s;
+  --hop: 4.05s;
   text-align: center;
   padding: 72px 24px 64px;
   overflow-x: clip;
@@ -272,18 +288,19 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
   transform-origin: 20% 90%;
 }
 
-.f.fall {
-  animation: fall 0.7s cubic-bezier(0.5, 0, 0.9, 0.6) forwards;
-}
-
-.f.collapsed {
-  max-width: 0;
-  transition: max-width 0.4s ease-in-out 0.35s;
+.playing .f {
+  animation:
+    fall 0.7s cubic-bezier(0.5, 0, 0.9, 0.6) var(--fall) forwards,
+    collapse 0.4s ease-in-out calc(var(--fall) + 0.35s) forwards;
 }
 
 @keyframes fall {
   25% { transform: rotate(35deg); }
   100% { opacity: 0; transform: translate(16px, 110px) rotate(120deg); }
+}
+
+@keyframes collapse {
+  to { max-width: 0; }
 }
 
 /* SOON stamp */
@@ -305,8 +322,8 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.18);
 }
 
-.soon.stamped {
-  animation: stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+.playing .soon {
+  animation: stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) var(--stamp) forwards;
 }
 
 .soon span {
@@ -317,8 +334,8 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
 .soon span:nth-child(3) { --i: 2; }
 .soon span:nth-child(4) { --i: 3; }
 
-.soon.hopping span {
-  animation: hop 0.4s ease-out calc(var(--i, 0) * 60ms);
+.playing .soon span {
+  animation: hop 0.4s ease-out calc(var(--hop) + var(--i, 0) * 60ms);
 }
 
 @keyframes stamp {
@@ -408,17 +425,16 @@ a.chip:hover {
 .item[href="#index"] { --at: 350ms; }
 .item[href="#examples"] { --at: 390ms; }
 
-.group.dissolve {
-  animation: dissolve 0.5s ease-in var(--at) forwards;
-  pointer-events: none;
+.playing .group.pending {
+  animation: dissolve 0.5s ease-in calc(var(--flash) + var(--at)) forwards;
 }
 
 @keyframes dissolve {
   100% { opacity: 0; filter: blur(6px); transform: scale(1.15); letter-spacing: 0.3em; }
 }
 
-.item:not(.show),
-.swap:not(.swapped) {
+.item,
+.swap {
   pointer-events: none;
 }
 
@@ -429,13 +445,14 @@ a.chip:hover {
   transform: translateY(6px) scale(0.9);
 }
 
-.item.show,
-.swap.swapped .swap-to {
-  opacity: 1;
-  filter: none;
-  transform: none;
-  transition: opacity 0.4s ease-out, filter 0.4s ease-out, transform 0.4s ease-out;
-  transition-delay: var(--at);
+.playing .item,
+.playing .swap,
+.playing .swap-to {
+  animation: reveal 0.4s ease-out calc(var(--flash) + var(--at)) forwards;
+}
+
+@keyframes reveal {
+  to { opacity: 1; filter: none; transform: none; pointer-events: auto; }
 }
 
 .swap {
@@ -446,15 +463,16 @@ a.chip:hover {
   grid-area: 1 / 1;
 }
 
-.swap.swapped .swap-from {
-  opacity: 0;
-  filter: blur(6px);
-  transition: opacity 0.2s ease-in, filter 0.2s ease-in;
-  transition-delay: var(--at);
+.playing .swap-from {
+  animation: fade-out 0.2s ease-in calc(var(--flash) + var(--at)) forwards;
 }
 
-.swap.swapped .swap-to {
-  transition-delay: calc(var(--at) + 80ms);
+.playing .swap-to {
+  animation-delay: calc(var(--flash) + var(--at) + 80ms);
+}
+
+@keyframes fade-out {
+  to { opacity: 0; filter: blur(6px); }
 }
 
 /* Flash */
@@ -479,8 +497,8 @@ a.chip:hover {
   opacity: 0;
 }
 
-.flash.on .band {
-  animation: sweep 1s ease-in-out forwards;
+.playing .band {
+  animation: sweep 1s ease-in-out var(--flash) forwards;
 }
 
 @keyframes sweep {
@@ -497,8 +515,8 @@ a.chip:hover {
   opacity: 0;
 }
 
-.flash.on .rays {
-  animation: rays 0.9s ease-out 0.15s forwards;
+.playing .rays {
+  animation: rays 0.9s ease-out calc(var(--flash) + 0.15s) forwards;
 }
 
 @keyframes rays {
@@ -522,29 +540,13 @@ a.chip:hover {
 .sparkle:nth-child(5 of .sparkle) { --x: -60px; --y: -70px; --d: 160ms; }
 .sparkle:nth-child(6 of .sparkle) { --x: 70px; --y: 70px; --d: 100ms; }
 
-.flash.on .sparkle {
-  animation: sparkle 0.9s ease-out calc(150ms + var(--d)) forwards;
+.playing .sparkle {
+  animation: sparkle 0.9s ease-out calc(var(--flash) + 150ms + var(--d)) forwards;
 }
 
 @keyframes sparkle {
   30% { opacity: 1; transform: translate(var(--x), var(--y)) scale(1.3); }
   100% { opacity: 0; transform: translate(calc(var(--x) * 1.3), calc(var(--y) * 1.3)) scale(0.4); }
-}
-
-.replay {
-  margin-top: 8px;
-  font-size: 0.8rem;
-  color: var(--vp-c-text-3);
-  cursor: pointer;
-}
-
-.replay:hover {
-  color: var(--vp-c-brand-3);
-}
-
-.replay-icon {
-  display: inline-block;
-  margin-right: 5px;
 }
 
 .tagline {
@@ -558,14 +560,6 @@ a.chip:hover {
 
 .tagline span {
   display: block;
-}
-
-.actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 28px;
 }
 
 .btn {
@@ -585,6 +579,43 @@ a.chip:hover {
 
 .btn-brand:hover {
   background-color: var(--vp-c-brand-1);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.waitlist {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.waitlist-email {
+  width: min(300px, 100%);
+  padding: 9px 14px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background-color: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  font-size: 0.95rem;
+}
+
+.waitlist-email:focus {
+  border-color: var(--vp-c-brand-1);
+}
+
+.waitlist-note {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--vp-c-text-3);
+}
+
+.tagline + .waitlist-note {
+  margin-top: 28px;
 }
 
 /* Parts */
@@ -863,21 +894,10 @@ td.win {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .title *,
-  .blocks *,
-  .part {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .flash,
-  .group.dissolve,
-  .f.fall {
-    opacity: 0;
-  }
-
-  .soon.stamped {
-    opacity: 1;
+  .pro * {
+    animation-duration: 1ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
   }
 }
 </style>

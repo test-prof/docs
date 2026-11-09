@@ -219,6 +219,16 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
         <span class="sep">&middot;</span>
         <a href="https://evilmartians.com/?utm_source=test-prof" target="_blank" rel="noopener">Evil Martians</a>
       </p>
+      <p class="footer-badge">
+        <a href="https://evilmartians.com/?utm_source=test-prof" target="_blank" rel="noopener">
+          <img
+            src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg"
+            alt="Sponsored by Evil Martians"
+            width="236"
+            height="54"
+          />
+        </a>
+      </p>
     </footer>
   </div>
 </template>
@@ -793,6 +803,15 @@ td.win {
 
 .footer a:hover {
   text-decoration: underline;
+}
+
+.footer-badge {
+  margin-top: 16px !important;
+  text-align: center;
+}
+
+.footer-badge a {
+  display: inline-block;
 }
 
 .sep {

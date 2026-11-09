@@ -40,8 +40,7 @@ onMounted(play)
 const active = ref<string | null>(null)
 let activeTimer: number | undefined
 
-const focusPart = (id: string) => {
-  document.getElementById(id)?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' })
+const highlight = (id: string) => {
   active.value = id
   window.clearTimeout(activeTimer)
   activeTimer = window.setTimeout(() => { active.value = null }, 2400)
@@ -115,7 +114,7 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
 
           <div v-for="row in rows" :key="row.name" class="row">
             <template v-if="row.kind !== 'verification'">
-              <span class="chip group pending" :class="{ dissolve: step >= STEP.flash }">{{ row.name }}</span>
+              <span class="chip group pending" :class="{ dissolve: step >= STEP.flash }" aria-hidden="true">{{ row.name }}</span>
               <span class="items">
                 <a
                   v-for="part in parts.filter((p) => p.kind === row.kind)"
@@ -123,7 +122,7 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
                   class="chip item"
                   :class="[`chip-${row.kind}`, { show: step >= STEP.flash }]"
                   :href="`#${part.id}`"
-                  @click.prevent="focusPart(part.id)"
+                  @click="highlight(part.id)"
                 >{{ part.title }}</a>
               </span>
             </template>
@@ -132,9 +131,9 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
               class="chip group chip-verification swap"
               :class="{ swapped: step >= STEP.flash }"
               href="#testprof"
-              @click.prevent="focusPart('testprof')"
+              @click="highlight('testprof')"
             >
-              <span class="swap-from">{{ row.name }}</span>
+              <span class="swap-from" aria-hidden="true">{{ row.name }}</span>
               <span class="swap-to">TestProf</span>
             </a>
           </div>
@@ -161,11 +160,11 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
         <div class="parts-grid">
           <div
             v-for="part in parts"
-            :id="part.id"
             :key="part.id"
             class="part"
             :class="{ active: active === part.id }"
           >
+            <span :id="part.id" class="part-anchor"></span>
             <div class="part-head">
               <span class="part-kind" :class="`kind-${part.kind}`">{{ part.kind }}</span>
               <h3>{{ part.title }}</h3>
@@ -234,6 +233,7 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
 .hero {
   text-align: center;
   padding: 72px 24px 64px;
+  overflow-x: clip;
 }
 
 .stage {
@@ -407,6 +407,11 @@ a.chip:hover {
   100% { opacity: 0; filter: blur(6px); transform: scale(1.15); letter-spacing: 0.3em; }
 }
 
+.item:not(.show),
+.swap:not(.swapped) {
+  pointer-events: none;
+}
+
 .item,
 .swap-to {
   opacity: 0;
@@ -574,8 +579,14 @@ a.chip:hover {
 
 /* Parts */
 .parts {
+  position: relative;
   padding: 48px 24px 64px;
   background-color: var(--vp-c-bg-soft);
+}
+
+.part-anchor {
+  position: absolute;
+  top: 0;
 }
 
 .parts-inner,
@@ -603,7 +614,6 @@ a.chip:hover {
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
   padding: 24px;
-  scroll-margin-top: 96px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -808,8 +818,22 @@ td.win {
     min-width: 0;
   }
 
+  .results {
+    padding: 40px 16px 48px;
+  }
+
+  th,
+  td {
+    padding: 6px 4px;
+    white-space: normal;
+  }
+
   .parts-grid {
     grid-template-columns: 1fr;
+  }
+
+  .part {
+    position: relative;
   }
 }
 

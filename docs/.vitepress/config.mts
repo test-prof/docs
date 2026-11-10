@@ -174,7 +174,9 @@ export default defineConfig({
 
   vite: {
     plugins: [
-      llmstxt(),
+      llmstxt({
+        ignoreFiles: ['pro.md'],
+      }),
     ],
   },
 
@@ -204,6 +206,7 @@ export default defineConfig({
         nav: [
           { text: 'Guide', link: '/guide/getting_started', activeMatch: '/guide/' },
           { text: 'LLMs', link: '/llms-full.txt' },
+          { text: 'TestPro<span class="nav-soon"><span>S</span><span>o</span><span>o</span><span>n</span></span>', link: '/pro' },
         ],
         sidebar: {
           '/guide/': guideSidebar,

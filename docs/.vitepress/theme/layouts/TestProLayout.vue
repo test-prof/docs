@@ -155,7 +155,7 @@ const COLUMNS = ['plain', 'docs', 'pro'] as const
         <button class="btn btn-brand" type="submit" :disabled="waitlist === 'sending'">Notify me</button>
       </form>
 
-      <p class="waitlist-note" role="status">
+      <p class="waitlist-note" :class="waitlist" role="status">
         <template v-if="waitlist === 'done'">Done. We'll email you when TestPro launches.</template>
         <template v-else-if="waitlist === 'error'">Something went wrong. Please try again.</template>
         <template v-else>Just one email at launch.</template>
@@ -614,8 +614,19 @@ a.chip:hover {
   color: var(--vp-c-text-3);
 }
 
-.tagline + .waitlist-note {
-  margin-top: 28px;
+.waitlist-note.done,
+.waitlist-note.error {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.waitlist-note.done {
+  margin-top: 38px;
+  color: var(--vp-c-brand-3);
+}
+
+.waitlist-note.error {
+  color: var(--vp-c-danger-1);
 }
 
 /* Parts */

@@ -1,9 +1,9 @@
-# Using with Ruby profilers
+# Ruby プロファイラと組み合わせて使う
 
-Test Prof allows you to use general Ruby profilers to profile test suites without needing to write any profiling code yourself.
-Just install the profiler library and run your tests!
+TestProf を使うと、プロファイリング用のコードを自分で書かなくても、一般的な Ruby プロファイラでテストスイートをプロファイリングできます。
+プロファイラのライブラリをインストールして、テストを実行するだけです！
 
-Supported profilers:
+サポートされているプロファイラ:
 
 - [StackProf](#stackprof)
 - [Vernier](#vernier)
@@ -11,9 +11,9 @@ Supported profilers:
 
 ## StackProf
 
-[StackProf][] is a sampling call-stack profiler for Ruby.
+[StackProf][] は Ruby 用のサンプリング方式のコールスタックプロファイラです。
 
-Make sure you have `stackprof` in your dependencies:
+依存関係に `stackprof` が含まれていることを確認してください:
 
 ```ruby
 # Gemfile
@@ -22,20 +22,20 @@ group :development, :test do
 end
 ```
 
-### Profiling the whole test suite with StackProf
+### StackProf でテストスイート全体をプロファイリングする
 
-**NOTE:** It's recommended to use [test sampling](../recipes/tests_sampling.md) to generate smaller profiling reports.
+**注意:** プロファイリングのレポートを小さくするために、[テストのサンプリング](../recipes/tests_sampling.md)を使用することをお勧めします。
 
-You can activate StackProf profiling by setting the `TEST_STACK_PROF` env variable:
+環境変数 `TEST_STACK_PROF` を設定すると、StackProf によるプロファイリングを有効にできます:
 
 ```sh
 TEST_STACK_PROF=1 bundle exec rake test
 
-# or for RSpec
+# RSpec の場合
 TEST_STACK_PROF=1 bundle exec rspec ...
 ```
 
-At the end of the test run, you will see the message from Test Prof including paths to generated reports (raw StackProf format and JSON):
+テストの実行が終わると、生成されたレポート (StackProf の raw 形式と JSON) のパスを含む TestProf からのメッセージが表示されます:
 
 ```sh
 ...
@@ -44,12 +44,12 @@ At the end of the test run, you will see the message from Test Prof including pa
 [TEST PROF INFO] StackProf JSON report generated: tmp/test_prof/stack-prof-report-wall-raw-total.json
 ```
 
-We recommend uploading JSON reports to [Speedscope][] and analyze flamegraphs. Otherwise, feel free to use the `stackprof` CLI
-to manipulate the raw report.
+JSON レポートを [Speedscope][] にアップロードして、フレームグラフを分析することをお勧めします。もちろん、`stackprof` の CLI
+を使って raw レポートを扱っても構いません。
 
-### Profiling individual examples with StackProf
+### StackProf で個々の example をプロファイリングする
 
-Test Prof provides a built-in shared context for RSpec to profile examples individually:
+TestProf は、example を個別にプロファイリングするための RSpec 用の組み込み shared context を提供しています:
 
 ```ruby
 it "is doing heavy stuff", :sprof do
@@ -57,14 +57,14 @@ it "is doing heavy stuff", :sprof do
 end
 ```
 
-**NOTE:** per-example profiling doesn't work when the global (per-suite) profiling is activated.
+**注意:** グローバルな (スイート単位の) プロファイリングが有効になっている場合、example 単位のプロファイリングは動作しません。
 
-### Profiling application boot with StackProf
+### StackProf でアプリケーションの起動をプロファイリングする
 
-The application boot time could also makes testing slower. Try to profile your boot process with StackProf using the following command:
+アプリケーションの起動時間もテストを遅くする要因になりえます。次のコマンドを使って、起動処理を StackProf でプロファイリングしてみてください:
 
 ```sh
-# pick some random spec (1 is enough)
+# 適当な spec を選びます (1 つで十分です)
 $ TEST_STACK_PROF=boot bundle exec rspec ./spec/some_spec.rb
 
 ...
@@ -72,25 +72,25 @@ $ TEST_STACK_PROF=boot bundle exec rspec ./spec/some_spec.rb
 [TEST PROF INFO] StackProf JSON report generated: tmp/test_prof/stack-prof-report-wall-raw-boot.json
 ```
 
-### StackProf configuration
+### StackProf の設定
 
-You can change StackProf mode (which is `wall` by default) through `TEST_STACK_PROF_MODE` env variable.
+StackProf のモード (デフォルトは `wall`) は、環境変数 `TEST_STACK_PROF_MODE` で変更できます。
 
-You can also change StackProf interval through `TEST_STACK_PROF_INTERVAL` env variable.
-For modes `wall` and `cpu`, `TEST_STACK_PROF_INTERVAL` represents microseconds and will default to 1000 as per `stackprof`.
-For mode `object`, `TEST_STACK_PROF_INTERVAL` represents allocations and will default to 1 as per `stackprof`.
+StackProf のインターバルも、環境変数 `TEST_STACK_PROF_INTERVAL` で変更できます。
+`wall` モードと `cpu` モードでは、`TEST_STACK_PROF_INTERVAL` はマイクロ秒を表し、デフォルトは `stackprof` と同じ 1000 です。
+`object` モードでは、`TEST_STACK_PROF_INTERVAL` はアロケーション数を表し、デフォルトは `stackprof` と同じ 1 です。
 
-You can disable garbage collection frames by setting `TEST_STACK_PROF_IGNORE_GC` env variable.
-Garbage collection time will still be present in the profile but not explicitly marked with
-its own frame.
+環境変数 `TEST_STACK_PROF_IGNORE_GC` を設定すると、ガベージコレクションのフレームを無効にできます。
+ガベージコレクションの時間はプロファイルに含まれたままですが、専用のフレームとして
+明示されなくなります。
 
-See [stack_prof.rb](https://github.com/test-prof/test-prof/tree/master/lib/test_prof/stack_prof.rb) for all available configuration options and their usage.
+利用可能なすべての設定オプションとその使い方については、[stack_prof.rb](https://github.com/test-prof/test-prof/tree/master/lib/test_prof/stack_prof.rb) を参照してください。
 
 ## Vernier
 
-[Vernier][] is next generation sampling profiler for Ruby. Give it a try and see if it can help in identifying test peformance bottlenecks!
+[Vernier][] は Ruby 用の次世代のサンプリングプロファイラです。ぜひ試してみて、テストの性能のボトルネックを特定するのに役立つか確かめてください！
 
-Make sure you have `vernier` in your dependencies:
+依存関係に `vernier` が含まれていることを確認してください:
 
 ```ruby
 # Gemfile
@@ -99,20 +99,20 @@ group :development, :test do
 end
 ```
 
-### Profiling the whole test suite with Vernier
+### Vernier でテストスイート全体をプロファイリングする
 
-**NOTE:** It's recommended to use [test sampling](../recipes/tests_sampling.md) to generate smaller profiling reports.
+**注意:** プロファイリングのレポートを小さくするために、[テストのサンプリング](../recipes/tests_sampling.md)を使用することをお勧めします。
 
-You can activate Verner profiling by setting the `TEST_VERNIER` env variable:
+環境変数 `TEST_VERNIER` を設定すると、Vernier によるプロファイリングを有効にできます:
 
 ```sh
 TEST_VERNIER=1 bundle exec rake test
 
-# or for RSpec
+# RSpec の場合
 TEST_VERNIER=1 bundle exec rspec ...
 ```
 
-At the end of the test run, you will see the message from Test Prof including the path to the generated report:
+テストの実行が終わると、生成されたレポートのパスを含む TestProf からのメッセージが表示されます:
 
 ```sh
 ...
@@ -120,11 +120,11 @@ At the end of the test run, you will see the message from Test Prof including th
 [TEST PROF INFO] Vernier report generated: tmp/test_prof/vernier-report-wall-raw-total.json
 ```
 
-Use the [profile-viewer](https://github.com/tenderlove/profiler/tree/ruby) gem or upload your profiles to [profiler.firefox.com](https://profiler.firefox.com).
+[profile-viewer](https://github.com/tenderlove/profiler/tree/ruby) gem を使うか、プロファイルを [vernier.prof](https://vernier.prof) にアップロードしてください。あるいは、profile-viewer のフォーク元である [profiler.firefox.com](https://profiler.firefox.com) を使うこともできます。
 
-### Profiling individual examples with Vernier
+### Vernier で個々の example をプロファイリングする
 
-Test Prof provides a built-in shared context for RSpec to profile examples individually:
+TestProf は、example を個別にプロファイリングするための RSpec 用の組み込み shared context を提供しています:
 
 ```ruby
 it "is doing heavy stuff", :vernier do
@@ -132,22 +132,41 @@ it "is doing heavy stuff", :vernier do
 end
 ```
 
-**NOTE:** per-example profiling doesn't work when the global (per-suite) profiling is activated.
+**注意:** グローバルな (スイート単位の) プロファイリングが有効になっている場合、example 単位のプロファイリングは動作しません。
 
-### Profiling application boot with Vernier
+### Vernier でアプリケーションの起動をプロファイリングする
 
-You can also profile your application boot process:
+アプリケーションの起動処理をプロファイリングすることもできます:
 
 ```sh
-# pick some random spec (1 is enough)
+# 適当な spec を選びます (1 つで十分です)
 TEST_VERNIER=boot bundle exec rspec ./spec/some_spec.rb
+```
+
+### Active Support Notifications からマーカーを追加する
+
+Active Support Notifications のイベントマーカーを追加すると、生成されるレポートからより多くの知見を得られます:
+
+```sh
+TEST_VERNIER=1 TEST_VERNIER_HOOKS=rails bundle exec rake test
+
+# RSpec の場合
+TEST_VERNIER=1 TEST_VERNIER_HOOKS=rails bundle exec rspec ...
+```
+
+あるいは、`Vernier` の設定で hooks パラメータを指定することもできます:
+
+```ruby
+TestProf::Vernier.configure do |config|
+  config.hooks = :rails
+end
 ```
 
 ## RubyProf
 
-Easily integrate the power of [ruby-prof](https://github.com/ruby-prof/ruby-prof) into your test suite.
+[ruby-prof](https://github.com/ruby-prof/ruby-prof) の力を、テストスイートに簡単に組み込めます。
 
-Make sure `ruby-prof` is installed:
+`ruby-prof` がインストールされていることを確認してください:
 
 ```ruby
 # Gemfile
@@ -156,28 +175,44 @@ group :development, :test do
 end
 ```
 
-### Profiling the whole test suite with RubyProf
+### RubyProf でテストスイート全体をプロファイリングする
 
-**NOTE:** It's highly recommended to use [test sampling](../recipes/tests_sampling.md) to generate smaller profiling reports and avoid slow test runs (RubyProf has a signifact overhead).
+**注意:** プロファイリングのレポートを小さくし、テストの実行が遅くなるのを避けるために、[テストのサンプリング](../recipes/tests_sampling.md)を使用することを強くお勧めします (RubyProf にはかなりのオーバーヘッドがあります)。
 
-You can activate the global profiling using the environment variable `TEST_RUBY_PROF`:
+環境変数 `TEST_RUBY_PROF` を使うと、グローバルなプロファイリングを有効にできます:
 
 ```sh
 TEST_RUBY_PROF=1 bundle exec rake test
 
-# or for RSpec
+# RSpec の場合
 TEST_RUBY_PROF=1 bundle exec rspec ...
 ```
 
-At the end of the test run, you will see the message from Test Prof including paths to generated reports:
+テストの実行が終わると、生成されたレポートのパスを含む TestProf からのメッセージが表示されます:
 
 ```sh
 [TEST PROF INFO] RubyProf report generated: tmp/test_prof/ruby-prof-report-flat-wall-total.txt
 ```
 
-### Profiling individual examples with RubyProf
+#### テストスイートの起動を除外する
 
-TestProf provides a built-in shared context for RSpec to profile examples individually:
+**注意:** RSpec のみ対応しています。
+
+アプリケーションの起動とテストの読み込みを RubyProf のレポートから除外し、実行されるテストだけを分析できると便利なことがあります (そうすれば、`Kernel#require` が最も遅いメソッドの上位に入ることもありません)。
+
+そのためには、環境変数 `TEST_RUBY_PROF_BOOT=false` (または "0"、"f") を指定します:
+
+```sh
+$ TEST_RUBY_PROF=1 TEST_RUBY_PROF_BOOT=0 bundle exec rspec ...
+
+[TEST PROF] RubyProf enabled for examples
+
+...
+```
+
+### RubyProf で個々の example をプロファイリングする
+
+TestProf は、example を個別にプロファイリングするための RSpec 用の組み込み shared context を提供しています:
 
 ```ruby
 it "is doing heavy stuff", :rprof do
@@ -185,19 +220,19 @@ it "is doing heavy stuff", :rprof do
 end
 ```
 
-**NOTE:** per-example profiling doesn't work when the global profiling is activated.
+**注意:** グローバルなプロファイリングが有効になっている場合、example 単位のプロファイリングは動作しません。
 
-### RubyProf configuration
+### RubyProf の設定
 
-The most useful configuration option is `printer` – it allows you to specify a RubyProf [printer](https://github.com/ruby-prof/ruby-prof#printers).
+最も便利な設定オプションは `printer` です。これにより、RubyProf の [printer](https://github.com/ruby-prof/ruby-prof#printers) を指定できます。
 
-You can specify a printer through environment variable `TEST_RUBY_PROF`:
+printer は環境変数 `TEST_RUBY_PROF` で指定できます:
 
 ```sh
 TEST_RUBY_PROF=call_stack bundle exec rake test
 ```
 
-Or in your code:
+あるいは、コードの中で指定します:
 
 ```ruby
 TestProf::RubyProf.configure do |config|
@@ -205,22 +240,22 @@ TestProf::RubyProf.configure do |config|
 end
 ```
 
-By default, we use `FlatPrinter`.
+デフォルトでは `FlatPrinter` を使用します。
 
-**NOTE:** to specify the printer for per-example profiles use `TEST_RUBY_PROF_PRINTER` env variable ('cause using `TEST_RUBY_PROF` activates the global profiling).
+**注意:** example 単位のプロファイルの printer を指定するには、環境変数 `TEST_RUBY_PROF_PRINTER` を使用してください (`TEST_RUBY_PROF` を使うとグローバルなプロファイリングが有効になってしまうためです)。
 
-Also, you can specify RubyProf mode (`wall`, `cpu`, etc) through `TEST_RUBY_PROF_MODE` env variable.
+また、RubyProf のモード (`wall`、`cpu` など) は環境変数 `TEST_RUBY_PROF_MODE` で指定できます。
 
-See [ruby_prof.rb](https://github.com/test-prof/test-prof/tree/master/lib/test_prof/ruby_prof.rb) for all available configuration options and their usage.
+利用可能なすべての設定オプションとその使い方については、[ruby_prof.rb](https://github.com/test-prof/test-prof/tree/master/lib/test_prof/ruby_prof.rb) を参照してください。
 
-It's useful to exclude some methods from the profile to focus only on the application code.
+アプリケーションのコードだけに集中するために、一部のメソッドをプロファイルから除外すると便利です。
 
-TestProf uses RubyProf [`exclude_common_methods!`](https://github.com/ruby-prof/ruby-prof/blob/e087b7d7ca11eecf1717d95a5c5fea1e36ea3136/lib/ruby-prof/profile/exclude_common_methods.rb) by default (disable it with `config.exclude_common_methods = false`).
+TestProf はデフォルトで RubyProf の [`exclude_common_methods!`](https://github.com/ruby-prof/ruby-prof/blob/e087b7d7ca11eecf1717d95a5c5fea1e36ea3136/lib/ruby-prof/profile/exclude_common_methods.rb) を使用します (`config.exclude_common_methods = false` で無効にできます)。
 
-We exclude some other common methods and RSpec specific internal methods by default.
-To disable TestProf-defined exclusions set `config.test_prof_exclusions_enabled = false`.
+そのほかの一般的なメソッドや RSpec 固有の内部メソッドも、デフォルトで除外しています。
+TestProf が定義している除外設定を無効にするには、`config.test_prof_exclusions_enabled = false` を設定してください。
 
-You can specify custom exclusions through `config.custom_exclusions`, e.g.:
+`config.custom_exclusions` で独自の除外設定を指定できます。例:
 
 ```ruby
 TestProf::RubyProf.configure do |config|

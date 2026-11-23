@@ -1,36 +1,39 @@
-# Custom RuboCop Cops
+# RuboCop のカスタム Cop
 
-TestProf comes with the [RuboCop](https://github.com/bbatsov/rubocop) cops that help you write more performant tests.
+TestProf には、より高いパフォーマンスのテストを書くことを支援する [RuboCop](https://github.com/rubocop/rubocop) の Cop が付属しています。
 
-To enable them, require `test_prof/rubocop` in your RuboCop configuration:
+これらを有効化するには、RuboCop の設定に `test-prof` を追加してください。
 
 ```yml
 # .rubocop.yml
-require:
- - 'test_prof/rubocop'
+plugins:
+ - 'test-prof'
 ```
 
-To configure cops to your needs:
+もしくは、動的に指定することも可能です。
+
+```sh
+bundle exec rubocop --plugin 'test-prof' --only RSpec/AggregateExamples
+```
+
+> [!NOTE]
+> プラグインの仕組みは RuboCop 1.72 以降でサポートされています。それより前のバージョンでは、`plugins` の代わりに `require` を使用してください。
+
+Cop を自分のニーズに合わせて設定する場合は、以下のようにしてください。
 
 ```yml
 RSpec/AggregateExamples:
   AddAggregateFailuresMetadata: false
 ```
 
-Or you can just require it dynamically:
-
-```sh
-bundle exec rubocop -r 'test_prof/rubocop' --only RSpec/AggregateExamples
-```
-
 ## RSpec/AggregateExamples
 
-This cop encourages you to use one of the greatest features of the recent RSpec – aggregating failures within an example.
+この Cop は、最近の RSpec の強力な機能の一つである「失敗の集約（aggregate_failures）」を example の中で使用することを推奨します。
 
-Instead of writing one example per assertion, you can group _independent_ assertions together, thus running all setup hooks only once.
-That can dramatically increase your performance (by reducing the total number of examples).
+アサーションごとに example を書くのではなく、_独立した_ アサーションを一つの example にまとめることで、セットアップのフックを一度だけ実行するようにできます。
+これにより、example の総数が減り、テストのパフォーマンスが劇的に向上することがあります。
 
-Consider an example:
+以下の例を考えます。
 
 ```ruby
 # bad
@@ -48,10 +51,11 @@ it "returns the second page", :aggregate_failures do
 end
 ```
 
-Auto-correction will typically add `:aggregate_failures` to examples, but if your project enables it globally, or selectively by e.g. deriving metadata from file location, you may opt-out of adding it using `AddAggregateFailuresMetadata` config option.
+自動修正 (auto-correct) では、通常 example に `:aggregate_failures` を自動的に追加します。
+しかし、プロジェクト全体でグローバルに有効にしている場合や、ファイルの場所からメタデータを導出するなどして選択的に有効にしている場合は、`AddAggregateFailuresMetadata` 設定オプションを使って、追加しないようにできます。
 
-This cop supports auto-correct feature, so you can automatically refactor you legacy tests!
+この Cop は自動修正をサポートしているため、古いテストを自動的にリファクタリングできます！
 
-**NOTE**: `its` examples shown here have been deprecated as of RSpec 3, but users of the [rspec-its gem](https://github.com/rspec/rspec-its) can leverage this cop to cut out that dependency.
+**注意**: ここで示した `its` の example は RSpec 3 以降では非推奨になっていますが、[rspec-its gem](https://github.com/rspec/rspec-its) を使用しているユーザーは、この Cop を活用してその依存をなくすことができます。
 
-**NOTE**: auto-correction of examples using block matchers, such as `change` is deliberately not supported.
+**注意**: `change` などのブロックマッチャーを使った example の自動修正は、意図的にサポートしていません。

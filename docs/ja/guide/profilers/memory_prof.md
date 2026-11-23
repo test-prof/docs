@@ -1,8 +1,8 @@
 # MemoryProf
 
-MemoryProf tracks memory usage during your test suite run, and can help to detect test examples and groups that cause memory spikes. Memory profiling supports two metrics: RSS and allocations.
+MemoryProf は、テストスイートの実行中のメモリ使用量を追跡し、メモリの急増を引き起こす example や group を見つけるのに役立ちます。メモリのプロファイリングは、RSS、アロケーション、GC 時間というメトリクスをサポートしています。
 
-Example output:
+出力例:
 
 ```sh
 [TEST PROF INFO] MemoryProf results
@@ -24,62 +24,66 @@ change Votes count (./spec/shared_examples/controllers/voted_examples.rb:23) –
 fails (./spec/shared_examples/controllers/invalid_examples.rb:3) – +32KB (5.00%)
 ```
 
-The examples block shows the amount of memory used by each example, and the groups block displays the memory allocated by other code defined in the groups. For example, RSpec groups may include heavy `before(:all)` (or `before_all`) setup blocks, so it is helpful to see which groups use the most amount of memory outside of their examples.
+この出力は、各 example とトップレベルの example group (通常はテストファイル) が使用したメモリの量を示しています。
 
-## Instructions
+## 使い方
 
-To activate MemoryProf with:
+MemoryProf を有効にする方法は次のとおりです。
 
 ### RSpec
 
-Use `TEST_MEM_PROF` environment variable to set which metric to use:
+環境変数 `TEST_MEM_PROF` で、使用するメトリクスを指定します。
 
 ```sh
 TEST_MEM_PROF='rss' rspec ...
 TEST_MEM_PROF='alloc' rake rspec ...
+TEST_MEM_PROF='gc' rake rspec ...
 ```
 
 ### Minitest
 
-Use `TEST_MEM_PROF` environment variable to set which metric to use:
+Minitest 6 以降では、まずテストヘルパーに `Minitest.load :test_prof` を追加して、TestProf プラグインを有効にする必要があります。
+
+環境変数 `TEST_MEM_PROF` で、使用するメトリクスを指定します。
 
 ```sh
 TEST_MEM_PROF='rss' rake test
-TEST_MEM_PROF='alloc' rspec ...
+TEST_MEM_PROF='alloc' rake test
+TEST_MEM_PROF='gc' rake test
 ```
 
-or use CLI options as well:
+CLI オプションを使うこともできます。
 
 ```sh
-# Run a specific file using CLI option
+# CLI オプションを使って特定のファイルを実行する
 ruby test/my_super_test.rb --mem-prof=rss
 
-# Show the list of possible options:
+# 使用できるオプションの一覧を表示する
 ruby test/my_super_test.rb --help
 ```
 
-## Configuration
+## 設定
 
-By default, MemoryProf tracks the top 5 examples and groups that use the largest amount of memory.
-You can set how many examples/groups to display with the option:
+デフォルトでは、MemoryProf はメモリ使用量の多い上位 5 件の example と group を追跡します。
+表示する example や group の件数は、次のオプションで指定できます。
 
 ```sh
 TEST_MEM_PROF='rss' TEST_MEM_PROF_COUNT=10 rspec ...
 ```
 
-or with CLI options for Minitest:
+Minitest の場合は CLI オプションで指定します。
 
 ```sh
-# Run a specific file using CLI option
+# CLI オプションを使って特定のファイルを実行する
 ruby test/my_super_test.rb --mem-prof=rs --mem-prof-top-count=10
 ```
 
-## Supported Ruby Engines & OS
+## サポートされる Ruby エンジンと OS
 
-Currently the allocation mode is not supported for JRuby.
+現在、アロケーションモードは JRuby ではサポートされていません。
 
-Since RSS depends on the OS, MemoryProf uses different tools to retrieve it:
+RSS は OS に依存するため、MemoryProf は RSS の取得に OS ごとに異なる手段を使用します。
 
-* Linux – `/proc/$pid/statm` file,
-* macOS, Solaris, BSD – `ps`,
-* Windows – `Get-Process`, requires PowerShell to be installed.
+* Linux – `/proc/$pid/statm` ファイル
+* macOS, Solaris, BSD – `ps`
+* Windows – `Get-Process` (PowerShell がインストールされている必要があります)

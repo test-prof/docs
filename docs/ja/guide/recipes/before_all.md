@@ -1,12 +1,12 @@
 # Before All
 
-Rails has a great feature – `transactional_tests`, i.e. running each example within a transaction which is roll-backed in the end.
+Rails には `transactional_tests` という優れた機能があります。これは、各 example をトランザクションの中で実行し、最後にロールバックするというものです。
 
-Thus no example pollutes global database state.
+そのため、どの example もデータベースのグローバルな状態を汚しません。
 
-But what if have a lot of examples with a common setup?
+しかし、共通のセットアップを持つ example がたくさんある場合はどうでしょうか？
 
-Of course, we can do something like this:
+もちろん、次のように書くことはできます。
 
 ```ruby
 describe BeatleWeightedSearchQuery do
@@ -17,11 +17,11 @@ describe BeatleWeightedSearchQuery do
     @john = create(:beatle, name: "John")
   end
 
-  # and about 15 examples here
+  # そして、ここに 15 個ほどの example が並ぶ
 end
 ```
 
-Or you can try `before(:all)`:
+あるいは `before(:all)` を試すこともできます。
 
 ```ruby
 describe BeatleWeightedSearchQuery do
@@ -34,10 +34,10 @@ describe BeatleWeightedSearchQuery do
 end
 ```
 
-But then you have to deal with database cleaning, which can be either tricky or slow.
+しかしその場合は、データベースのクリーニングに対処しなければならず、これは厄介だったり遅かったりします。
 
-There is a better option: we can wrap the whole example group into a transaction.
-And that's how `before_all` works:
+もっと良い選択肢があります。example group 全体をトランザクションで包めばよいのです。
+`before_all` はまさにそのように動作します。
 
 ```ruby
 describe BeatleWeightedSearchQuery do
@@ -50,22 +50,22 @@ describe BeatleWeightedSearchQuery do
 end
 ```
 
-That's all!
+これだけです！
 
-**NOTE**: requires RSpec >= 3.3.0.
+**注意**: RSpec >= 3.3.0 が必要です。
 
-**NOTE**: Great superpower that `before_all` provides comes with a great responsibility.
-Make sure to check the [Caveats section](#caveats) of this document for details.
+**注意**: `before_all` がもたらす大いなる力には、大いなる責任が伴います。
+詳細については、このドキュメントの[注意点のセクション](#caveats)を必ず確認してください。
 
-## Instructions
+## 使い方
 
-### Multiple database support
+### 複数データベースのサポート
 
-The ActiveRecord BeforeAll adapter will only start a transaction using ActiveRecord::Base connection.
-If you want to ensure `before_all` can use multiple connections, you need to ensure the connection
-classes are loaded before using `before_all`.
+ActiveRecord の BeforeAll アダプタは、ActiveRecord::Base のコネクションを使ってのみトランザクションを開始します。
+`before_all` で複数のコネクションを使えるようにしたい場合は、`before_all` を使う前に
+コネクションクラスがロードされているようにする必要があります。
 
-For example, imagine you have `ApplicationRecord` and a separate database for user accounts:
+たとえば、`ApplicationRecord` と、ユーザーアカウント用の別のデータベースがあるとします。
 
 ```ruby
 class Users < AccountsRecord
@@ -77,34 +77,34 @@ class Articles < ApplicationRecord
 end
 ```
 
-Then those two Connection Classes do need to be loaded before the tests are run:
+この場合、テストを実行する前に、これら 2 つのコネクションクラスをロードしておく必要があります。
 
 ```ruby
 
-# Ensure connection classes are loaded
+# コネクションクラスが確実にロードされるようにする
 ApplicationRecord
 AccountsRecord
 ```
 
-This code can be added to `rails_helper.rb` or the rake tasks that runs minitests.
+このコードは `rails_helper.rb` や、Minitest を実行する rake タスクに追加できます。
 
 ### RSpec
 
-In your `rails_helper.rb` (or `spec_helper.rb` after *ActiveRecord* has been loaded):
+`rails_helper.rb` (または `spec_helper.rb` の *ActiveRecord* がロードされた後) に次の記述を追加してください。
 
 ```ruby
 require "test_prof/recipes/rspec/before_all"
 ```
 
-**NOTE**: `before_all` (and `let_it_be` that depends on it), does not wrap individual
-tests in a database transaction of its own. Use Rails' native `use_transactional_tests`
-(`use_transactional_fixtures` in Rails < 5.1), RSpec Rails' `use_transactional_fixtures`,
-DatabaseCleaner, or custom code that begins a transaction before each test and rolls it
-back after.
+**注意**: `before_all` (およびそれに依存する `let_it_be`) は、個々のテストを
+独自のデータベーストランザクションで包むことはしません。Rails ネイティブの `use_transactional_tests`
+(Rails < 5.1 では `use_transactional_fixtures`)、RSpec Rails の `use_transactional_fixtures`、
+DatabaseCleaner、あるいは各テストの前にトランザクションを開始して後でロールバックする
+独自のコードを使ってください。
 
 ### Minitest
 
-It is possible to use `before_all` with Minitest too:
+`before_all` は Minitest でも使うことができます。
 
 ```ruby
 require "test_prof/recipes/minitest/before_all"
@@ -119,21 +119,21 @@ class MyBeatlesTest < Minitest::Test
     @john = create(:beatle, name: "John")
   end
 
-  # define tests which could access the object defined within `before_all`
+  # `before_all` の中で定義したオブジェクトにアクセスできるテストを定義する
 end
 ```
 
-In addition to `before_all`, TestProf also provides a `after_all` callback, which is called right before the transaction open by `before_all` is closed, i.e., after the last example from the test class completes.
+`before_all` に加えて、TestProf は `after_all` コールバックも提供しています。これは、`before_all` が開いたトランザクションが閉じられる直前、つまりテストクラスの最後の example が完了した後に呼び出されます。
 
-## Database adapters
+## データベースアダプタ
 
-You can use `before_all` not only with ActiveRecord (which is supported out-of-the-box) but with other database tools too.
+`before_all` は、(標準でサポートされている) ActiveRecord だけでなく、他のデータベースツールでも使うことができます。
 
-All you need is to build a custom adapter and configure `before_all` to use it:
+必要なのは、カスタムアダプタを作成し、それを使うように `before_all` を設定することだけです。
 
 ```ruby
 class MyDBAdapter
-  # before_all adapters must implement two methods:
+  # before_all のアダプタは次の 2 つのメソッドを実装しなければなりません:
   # - begin_transaction
   # - rollback_transaction
   def begin_transaction
@@ -145,35 +145,35 @@ class MyDBAdapter
   end
 end
 
-# And then set adapter for `BeforeAll` module
+# そして `BeforeAll` モジュールにアダプタを設定する
 TestProf::BeforeAll.adapter = MyDBAdapter.new
 ```
 
-## Hooks
+## フック
 
-You can register callbacks to run before/after `before_all` opens and rollbacks a transaction:
+`before_all` がトランザクションを開く前後、およびロールバックする前後に実行されるコールバックを登録できます。
 
 ```ruby
 TestProf::BeforeAll.configure do |config|
   config.before(:begin) do
-    # do something before transaction opens
+    # トランザクションが開く前に何か処理を行う
   end
-  # after(:begin) is also available
+  # after(:begin) も利用できます
 
   config.after(:rollback) do
-    # do something after transaction closes
+    # トランザクションが閉じた後に何か処理を行う
   end
-  # before(:rollback) is also available
+  # before(:rollback) も利用できます
 end
 ```
 
-See the example in [Discourse](https://github.com/discourse/discourse/blob/4a1755b78092d198680c2fe8f402f236f476e132/spec/rails_helper.rb#L81-L141).
+[Discourse](https://github.com/discourse/discourse/blob/4a1755b78092d198680c2fe8f402f236f476e132/spec/rails_helper.rb#L81-L141) での使用例をご覧ください。
 
-## Caveats
+## 注意点 {#caveats}
 
-### Database is rolled back to a pristine state, but the objects are not
+### データベースは元の状態にロールバックされるが、オブジェクトはされない
 
-If you modify objects generated within a `before_all` block in your examples, you maybe have to re-initiate them:
+`before_all` ブロックの中で生成したオブジェクトを example の中で変更する場合、オブジェクトを初期化し直す必要があるかもしれません。
 
 ```ruby
 before_all do
@@ -183,70 +183,70 @@ end
 let(:user) { @user }
 
 it "when user is admin" do
-  # we modified our object in-place!
+  # オブジェクトをその場で変更してしまった！
   user.update!(role: 1)
   expect(user).to be_admin
 end
 
 it "when user is regular" do
-  # now @user's state depends on the order of specs!
+  # こうなると @user の状態は spec の実行順序に依存する！
   expect(user).not_to be_admin
 end
 ```
 
-The easiest way to solve this is to reload record for every example (it's still much faster than creating a new one):
+これを解決する最も簡単な方法は、example ごとにレコードをリロードすることです (それでも新しく作成するよりずっと高速です)。
 
 ```ruby
 before_all do
   @user = create(:user)
 end
 
-# Note, that @user.reload may not be enough,
-# 'cause it doesn't reset associations
+# @user.reload では不十分な場合があることに注意してください。
+# 関連付けがリセットされないためです
 let(:user) { User.find(@user.id) }
 
-# or with Minitest
+# あるいは Minitest の場合
 def setup
   @user = User.find(@user.id)
 end
 ```
 
-### Database is not rolled back between tests
+### データベースはテスト間ではロールバックされない
 
-Database is not rolled back between RSpec examples, only between example groups.
-We don't want to reinvent the wheel and encourage you to use other tools that
-provide this out of the box.
+`before_all` がデータベースをロールバックするのは example group の間だけで、RSpec の example の間ではロールバックしません。
+私たちは車輪の再発明をしたくないので、この機能を標準で提供している
+他のツールを使うことをお勧めします。
 
-If you're using RSpec Rails, turn on `RSpec.configuration.use_transactional_fixtures` in your `spec/rails_helper.rb`:
+RSpec Rails を使っている場合は、`spec/rails_helper.rb` で `RSpec.configuration.use_transactional_fixtures` を有効にしてください。
 
 ```ruby
 RSpec.configure do |config|
-  config.use_transactional_fixtures = true # RSpec takes care to use `use_transactional_tests` or `use_transactional_fixtures` depending on the Rails version used
+  config.use_transactional_fixtures = true # RSpec は、使用している Rails のバージョンに応じて `use_transactional_tests` と `use_transactional_fixtures` を使い分けてくれます
 end
 ```
 
-Make sure to set `use_transactional_tests` (`use_transactional_fixtures` in Rails < 5.1) to `true` if you're using Minitest.
+Minitest を使っている場合は、`use_transactional_tests` (Rails < 5.1 では `use_transactional_fixtures`) を必ず `true` に設定してください。
 
-If you're using DatabaseCleaner, make sure it rolls back the database between tests.
+DatabaseCleaner を使っている場合は、テスト間でデータベースがロールバックされるようになっていることを確認してください。
 
-## Usage with Isolator
+## Isolator と併用する
 
-[Isolator](https://github.com/palkan/isolator) is a runtime detector of potential atomicity breaches within DB transactions (e.g. making HTTP calls or enqueuing background jobs).
+[Isolator](https://github.com/palkan/isolator) は、DB トランザクション内でアトミック性が破られる可能性のある箇所 (HTTP 呼び出しやバックグラウンドジョブのエンキューなど) を実行時に検出するツールです。
 
-TestProf recognizes Isolator out-of-the-box and make it ignore `before_all` transactions.
+TestProf は Isolator を標準で認識し、`before_all` のトランザクションを無視させます。
 
-You just need to make sure that you require `isolator` before loading `before_all` (or `let_it_be`).
+必要なのは、`before_all` (または `let_it_be`) をロードする前に `isolator` を require しておくことだけです。
 
-Alternatively, you can load the patch explicitly:
+あるいは、パッチを明示的にロードすることもできます。
 
 ```ruby
-# after loading before_all or/and let_it_be
+# before_all や let_it_be をロードした後に
 require "test_prof/before_all/isolator"
 ```
 
-## Using Rails fixtures (_experimental_)
+## Rails のフィクスチャを使う (_実験的_)
 
-If you want to use fixtures within a `before_all` hook, you must explicitly opt-in via `setup_fixture:` option:
+`before_all` フックの中でフィクスチャを使いたい場合は、`setup_fixture:` オプションで明示的にオプトインする必要があります。
 
 ```ruby
 before_all(setup_fixtures: true) do
@@ -255,9 +255,9 @@ before_all(setup_fixtures: true) do
 end
 ```
 
-Works for both Minitest and RSpec.
+Minitest と RSpec の両方で動作します。
 
-You can also enable fixtures globally (i.e., for all `before_all` hooks):
+フィクスチャをグローバルに (つまり、すべての `before_all` フックで) 有効にすることもできます。
 
 ```ruby
 TestProf::BeforeAll.configure do |config|
@@ -265,9 +265,9 @@ TestProf::BeforeAll.configure do |config|
 end
 ```
 
-## Global Tags
+## グローバルタグ
 
-You can register callbacks for specific RSpec Example Groups using tags:
+タグを使って、特定の RSpec の example group に対するコールバックを登録できます。
 
 ```ruby
 TestProf::BeforeAll.configure do |config|

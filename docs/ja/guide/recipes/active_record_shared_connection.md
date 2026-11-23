@@ -1,28 +1,28 @@
 # Active Record Shared Connection
 
-> 💀  This functionality has been removed in v1.0.
+> 💀  この機能は v1.0 で削除されました。
 
-**NOTE:** a similar functionality has been added to Rails since version 5.1 (see [PR](https://github.com/rails/rails/pull/28083)). You shouldn't use `ActiveRecordSharedConnection` with modern Rails, it could lead to unexpected behaviour (e.g., mutexes deadlocks).
+**注意:** 同様の機能が、バージョン 5.1 以降の Rails に追加されています ([PR](https://github.com/rails/rails/pull/28083) を参照)。最近の Rails では `ActiveRecordSharedConnection` を使うべきではありません。予期しない動作 (たとえば mutex のデッドロック) を引き起こすおそれがあります。
 
-Active Record creates a connection per thread by default.
+Active Record は、デフォルトではスレッドごとにコネクションを作成します。
 
-That doesn't allow us to use `transactional_tests` feature in system (with Capybara) tests (since Capybara runs a web server in a separate thread).
+そのため、(Capybara を使う) システムテストでは `transactional_tests` 機能を使えません (Capybara は Web サーバーを別のスレッドで実行するためです)。
 
-A common approach is to use `database_cleaner` with a non-transactional strategy (`truncation` / `deletion`). But that _cleaning_ phase may affect tests run time (and usually does).
+よくある方法は、`database_cleaner` をトランザクションを使わないストラテジー (`truncation` / `deletion`) で使うことです。しかし、この _クリーニング_ のフェーズはテストの実行時間に影響することがあります (そして、たいていは影響します)。
 
-Sharing the connection between threads would allows us to use transactional tests as always.
+スレッド間でコネクションを共有すれば、いつもどおりトランザクショナルテストを使えるようになります。
 
-## Instructions
+## 使い方
 
-In your `spec_helper.rb` (or `rails_helper.rb` if any):
+`spec_helper.rb` (あれば `rails_helper.rb`) に以下を追加してください。
 
 ```ruby
 require "test_prof/recipes/active_record_shared_connection"
 ```
 
-That automatically enables _shared connection_ mode.
+これにより、_shared connection_ モードが自動的に有効になります。
 
-You can enable/disable it manually:
+手動で有効・無効を切り替えることもできます。
 
 ```ruby
 TestProf::ActiveRecordSharedConnection.enable!

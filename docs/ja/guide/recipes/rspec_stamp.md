@@ -1,20 +1,20 @@
 # RSpecStamp
 
-RSpecStamp is a tool to automatically _tag_ failed examples with custom tags.
+RSpecStamp は、失敗した example に独自のタグを自動的に _付ける_ ツールです。
 
-It _literally_ adds tags to your examples (i.e. rewrites them).
+example に _文字どおり_ タグを追加します (つまり、example を書き換えます)。
 
-The main purpose of RSpecStamp is to make testing codebase refactoring easy. Changing global configuration may cause a lot of failures. You can patch failing spec by adding a shared context. And here comes RSpecStamp.
+RSpecStamp の主な目的は、テストコードベースのリファクタリングを簡単にすることです。グローバルな設定を変更すると、大量の失敗が発生することがあります。失敗する spec には、shared context を追加することで手当てできます。そこで RSpecStamp の出番です。
 
-## Example Use Case: Sidekiq Inline
+## ユースケースの例: Sidekiq Inline
 
-Using `Sidekiq::Testing.inline!` may be considered a _bad practice_ (see [here](https://github.com/mperham/sidekiq/issues/3495)) due to its negative performance impact. But it's still widely used.
+`Sidekiq.testing!(:inline)` を使うことは、パフォーマンスへの悪影響があるため、_バッドプラクティス_ と見なされることがあります ([こちら](https://github.com/mperham/sidekiq/issues/3495)を参照)。それでも、いまだに広く使われています。
 
-How to migrate from `inline!` to `fake!`?
+`inline!` から `fake!` へ移行するにはどうすればよいでしょうか？
 
-Step 0. Make sure that all your tests pass.
+ステップ 0. すべてのテストが通ることを確認します。
 
-Step 1. Create a shared context to conditionally turn on `inline!` mode:
+ステップ 1. 条件付きで `inline!` モードを有効にする shared context を作成します。
 
 ```ruby
 shared_context "sidekiq:inline", sidekiq: :inline do
@@ -22,28 +22,28 @@ shared_context "sidekiq:inline", sidekiq: :inline do
 end
 ```
 
-Step 2. Turn on `fake!` mode globally.
+ステップ 2. `fake!` モードをグローバルに有効にします。
 
-Step 3. Run `RSTAMP=sidekiq:inline rspec`.
+ステップ 3. `RSTAMP=sidekiq:inline rspec` を実行します。
 
-The output of the command above contains information about the _stamping_ process:
+上のコマンドの出力には、_スタンプ_ の処理についての情報が含まれます。
 
-- How many files have been affected?
+- いくつのファイルが影響を受けたか？
 
-- How many patches were made?
+- いくつのパッチが作られたか？
 
-- How many patches failed?
+- いくつのパッチが失敗したか？
 
-- How many files have been ignored?
+- いくつのファイルが無視されたか？
 
-Now all (or almost all) failing specs are tagged with `sidekiq: :inline`. Run the whole suite again and check it there are any failures left.
+これで、失敗する spec のすべて (あるいはほぼすべて) に `sidekiq: :inline` のタグが付きました。スイート全体をもう一度実行し、失敗が残っていないか確認してください。
 
-There is also a `dry-run` mode (activated by `RSTAMP_DRY_RUN=1` env variable) which prints out patches instead of re-writing files.
+`dry-run` モード (環境変数 `RSTAMP_DRY_RUN=1` で有効になります) もあり、ファイルを書き換える代わりにパッチを出力します。
 
-## Configuration
+## 設定
 
-By default, RSpecStamp ignores examples located in `spec/support` directory (typical place to put shared examples in).
-You can add more _ignore_ patterns:
+デフォルトでは、RSpecStamp は `spec/support` ディレクトリ (shared example を置く典型的な場所) にある example を無視します。
+_無視する_ パターンを追加することもできます。
 
 ```ruby
 TestProf::RSpecStamp.configure do |config|

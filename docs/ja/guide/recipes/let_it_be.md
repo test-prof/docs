@@ -1,8 +1,8 @@
 # Let It Be
 
-Let's bring a little bit of magic and introduce a new way to set up a _shared_ test data.
+少しばかりの魔法を持ち込んで、_共有_ のテストデータをセットアップする新しい方法を紹介しましょう。
 
-Suppose you have the following setup:
+次のようなセットアップがあるとします。
 
 ```ruby
 describe BeatleWeightedSearchQuery do
@@ -13,13 +13,13 @@ describe BeatleWeightedSearchQuery do
 
   specify { expect(subject.call("john")).to contain_exactly(john) }
 
-  # and more examples here
+  # さらに example が続きます
 end
 ```
 
-We don't need to re-create the Fab Four for every example, do we?
+example ごとに Fab Four を作り直す必要はありませんよね？
 
-We already have [`before_all`](./before_all.md) to solve the problem of _repeatable_ data:
+_繰り返し使える_ データを example ごとに作り直してしまう問題を解決するものとして、すでに [`before_all`](./before_all.md) があります。
 
 ```ruby
 describe BeatleWeightedSearchQuery do
@@ -34,9 +34,9 @@ describe BeatleWeightedSearchQuery do
 end
 ```
 
-That technique works pretty good but requires us to use instance variables and define everything at once. Thus it's not easy to refactor existing tests which use `let/let!` instead.
+この手法はかなりうまく動作しますが、インスタンス変数を使い、すべてを一度に定義する必要があります。そのため、代わりに `let/let!` を使っている既存のテストをリファクタリングするのは簡単ではありません。
 
-With `let_it_be` you can do the following:
+`let_it_be` を使うと、次のように書けます。
 
 ```ruby
 describe BeatleWeightedSearchQuery do
@@ -47,24 +47,24 @@ describe BeatleWeightedSearchQuery do
 
   specify { expect(subject.call("john")).to contain_exactly(john) }
 
-  # and more examples here
+  # さらに example が続きます
 end
 ```
 
-That's it! Just replace `let!` with `let_it_be`. That's equal to the `before_all` approach but requires less refactoring.
+これだけです！ `let!` を `let_it_be` に置き換えるだけです。これは `before_all` を使う方法と同等ですが、必要なリファクタリングは少なくて済みます。
 
-**NOTE**: Great superpower that `before_all` provides comes with a great responsibility.
-Make sure to check the [Caveats section](#caveats) of this document for details.
+**注意**: `before_all` がもたらす大いなる力には、大いなる責任が伴います。
+詳細については、このドキュメントの[注意点のセクション](#caveats)を必ず確認してください。
 
-## Instructions
+## 使い方
 
-In your `rails_helper.rb` or `spec_helper.rb`:
+`rails_helper.rb` または `spec_helper.rb` に以下を追加してください。
 
 ```ruby
 require "test_prof/recipes/rspec/let_it_be"
 ```
 
-In your tests:
+テストでは次のように書きます。
 
 ```ruby
 describe MySuperDryService do
@@ -74,139 +74,139 @@ describe MySuperDryService do
 end
 ```
 
-`let_it_be` won't automatically bring the database to its previous state between
-the examples, it only does that between example groups.
-Use Rails' native `use_transactional_tests` (`use_transactional_fixtures` in Rails < 5.1),
-RSpec Rails' `use_transactional_fixtures`, DatabaseCleaner, or custom code that
-begins a transaction before each test and rolls it back after.
+`let_it_be` は、example の間でデータベースを自動的に以前の状態へ戻すことはしません。
+それを行うのは example group の間だけです。
+Rails 標準の `use_transactional_tests` (Rails < 5.1 では `use_transactional_fixtures`)、
+RSpec Rails の `use_transactional_fixtures`、DatabaseCleaner、あるいは
+各テストの前にトランザクションを開始し、後でロールバックする独自のコードを使ってください。
 
-## Caveats
+## 注意点 {#caveats}
 
-### Database is rolled back to a pristine state, but the objects are not
+### データベースは元の状態にロールバックされるが、オブジェクトはされない
 
-If you modify objects generated within a `let_it_be` block in your examples, you maybe have to re-initiate them.
-We have a built-in _modifiers_ support for that.
+`let_it_be` ブロックの中で生成したオブジェクトを example の中で変更する場合、それらを再初期化する必要があるかもしれません。
+そのために、組み込みの _モディファイア_ を用意しています。
 
-### Database is not rolled back between tests
+### テストの間でデータベースはロールバックされない
 
-Database is not rolled back between RSpec examples, only between example groups.
-We don't want to reinvent the wheel and encourage you to use other tools that
-provide this out of the box.
+データベースは RSpec の example の間ではロールバックされず、example group の間でのみロールバックされます。
+私たちは車輪の再発明をしたくないので、これを標準で提供している他のツールを
+使うことをお勧めします。
 
-If you're using RSpec Rails, turn on `RSpec.configuration.use_transactional_fixtures` in your `spec/rails_helper.rb`:
+RSpec Rails を使っている場合は、`spec/rails_helper.rb` で `RSpec.configuration.use_transactional_fixtures` を有効にしてください。
 
 ```ruby
 RSpec.configure do |config|
-  config.use_transactional_fixtures = true # RSpec takes care to use `use_transactional_tests` or `use_transactional_fixtures` depending on the Rails version used
+  config.use_transactional_fixtures = true # 使用している Rails のバージョンに応じて、RSpec が `use_transactional_tests` と `use_transactional_fixtures` を使い分けてくれます
 end
 ```
 
-Make sure to set `use_transactional_tests` (`use_transactional_fixtures` in Rails < 5.1) to `true` if you're using Minitest.
+Minitest を使っている場合は、`use_transactional_tests` (Rails < 5.1 では `use_transactional_fixtures`) を必ず `true` に設定してください。
 
-If you're using DatabaseCleaner, make sure it rolls back the database between tests.
+DatabaseCleaner を使っている場合は、テストの間でデータベースがロールバックされるようにしてください。
 
-## Aliases
+## エイリアス
 
-Naming is hard. Handling edge cases (the ones described above) is also tricky.
+名前を付けるのは難しいものです。(上で述べたような) エッジケースを扱うのもやっかいです。
 
-To solve this we provide a way to define `let_it_be` aliases with the predefined options:
+これを解決するために、あらかじめ決めたオプションを持つ `let_it_be` のエイリアスを定義する方法を用意しています。
 
 ```ruby
 # rails_helper.rb
 TestProf::LetItBe.configure do |config|
-  # define an alias with `refind: true` by default
+  # デフォルトで `refind: true` となるエイリアスを定義する
   config.alias_to :let_it_be_with_refind, refind: true
 end
 
-# then use it in your tests
+# そして、テストの中でそれを使う
 describe "smth" do
   let_it_be_with_refind(:foo) { Foo.create }
 
-  # refind can still be overridden
+  # それでも refind は上書きできる
   let_it_be_with_refind(:bar, refind: false) { Bar.create }
 end
 ```
 
-## Modifiers
+## モディファイア
 
-If you modify objects generated within a `let_it_be` block in your examples, you maybe have to re-initiate them to avoid state leakage between the examples.
-Keep in mind that even though the database is rolled back to its pristine state, models themselves are not.
+`let_it_be` ブロックの中で生成したオブジェクトを example の中で変更する場合、example 間で状態が持ち越されるのを避けるために、それらを再初期化する必要があるかもしれません。
+データベースが元の状態にロールバックされても、モデル自体は元に戻らないことを覚えておいてください。
 
-We have a built-in _modifiers_ support for getting models to their pristine state:
+モデルを元の状態に戻すために、組み込みの _モディファイア_ を用意しています。
 
 ```ruby
-# Use reload: true option to reload user object (assuming it's an instance of ActiveRecord)
-# for every example
+# reload: true オプションを使うと、example ごとに user オブジェクトを
+# リロードします (ActiveRecord のインスタンスであることを想定)
 let_it_be(:user, reload: true) { create(:user) }
 
-# it is almost equal to
+# これは次のコードとほぼ同等です
 before_all { @user = create(:user) }
 let(:user) { @user.reload }
 
-# You can also specify refind: true option to hard-reload the record
+# refind: true オプションを指定して、レコードを完全に読み込み直すこともできます
 let_it_be(:user, refind: true) { create(:user) }
 
-# it is almost equal to
+# これは次のコードとほぼ同等です
 before_all { @user = create(:user) }
 let(:user) { User.find(@user.id) }
 ```
 
-**NOTE:** make sure that you require `let_it_be` after `active_record` is loaded (e.g., in `rails_helper.rb` **after** requiring the Rails app); otherwise the `refind` and `reload` modifiers are not activated.
+**注意:** `let_it_be` は、必ず `active_record` が読み込まれた後で require してください (たとえば、`rails_helper.rb` の中で Rails アプリケーションを require した**後**)。そうしないと、`refind` と `reload` のモディファイアは有効になりません。
 
-You can also use modifiers with array values, e.g. `create_list`:
+モディファイアは、`create_list` のような配列の値に対しても使えます。
 
 ```ruby
 let_it_be(:posts, reload: true) { create_list(:post, 3) }
 
-# it's the same as
+# これは次のコードと同じです
 before_all { @posts = create_list(:post, 3) }
 let(:posts) { @posts.map(&:reload) }
 ```
 
-### Custom Modifiers
+### カスタムモディファイア
 
-If `reload` and `refind` is not enough, you can add your custom modifier:
+`reload` と `refind` だけでは足りない場合は、独自のモディファイアを追加できます。
 
 ```ruby
 # rails_helper.rb
 TestProf::LetItBe.configure do |config|
-  # Define a block which will be called when you access a record first within an example.
-  # The first argument is the pre-initialized record,
-  # the second is the value of the modifier.
+  # example の中でレコードに最初にアクセスしたときに呼び出されるブロックを定義します。
+  # 第 1 引数は初期化済みのレコード、
+  # 第 2 引数はモディファイアの値です。
   #
-  # This is how `reload` modifier is defined
+  # `reload` モディファイアは次のように定義されています
   config.register_modifier :reload do |record, val|
-    # ignore when `reload: false`
+    # `reload: false` の場合は無視する
     next record unless val
-    # ignore non-ActiveRecord objects
+    # ActiveRecord 以外のオブジェクトは無視する
     next record unless record.is_a?(::ActiveRecord::Base)
     record.reload
   end
 end
 ```
 
-### Default Modifiers
+### デフォルトのモディファイア
 
-It's possible to configure the default modifiers used for all `let_it_be` calls:
+すべての `let_it_be` の呼び出しで使われるデフォルトのモディファイアを設定できます。
 
-- Globally:
+- グローバルに:
 
 ```ruby
 TestProf::LetItBe.configure do |config|
-  # Make refind activated by default
+  # refind をデフォルトで有効にする
   config.default_modifiers[:refind] = true
 end
 ```
 
-- For specific contexts using tags:
+- タグを使って特定のコンテキストに対して:
 
 ```ruby
 context "with let_it_be reload", let_it_be_modifiers: {reload: true} do
-  # examples
+  # example
 end
 ```
 
-**NOTE:** Nested contexts tags are overwritten not merged:
+**注意:** ネストしたコンテキストのタグはマージされず、上書きされます。
 
 ```ruby
 TestProf::LetItBe.configure do |config|
@@ -214,44 +214,46 @@ TestProf::LetItBe.configure do |config|
 end
 
 context "with reload", let_it_be_modifiers: {reload: true} do
-  # uses freeze: false, reload: true here
+  # ここでは freeze: false, reload: true が使われる
 
   context "with freeze", let_it_be_modifiers: {freeze: true} do
-    # uses only freeze: true (reload: true is overwritten by new metadata)
+    # freeze: true だけが使われる (reload: true は新しいメタデータで上書きされる)
   end
 end
 ```
 
-## State Leakage Detection
+## 状態の持ち越しの検出
 
-From [`rspec-rails` docs](https://relishapp.com/rspec/rspec-rails/v/3-9/docs/transactions) on transactions and `before(:context)`:
+[`rspec-rails` のドキュメント](https://relishapp.com/rspec/rspec-rails/v/3-9/docs/transactions)には、トランザクションと `before(:context)` について次のように書かれています。
 
 > Even though database updates in each example will be rolled back, the object won't know about those rollbacks so the object and its backing data can easily get out of sync.
+>
+> (各 example でのデータベースの更新はロールバックされますが、オブジェクトはそのロールバックを知らないため、オブジェクトとその裏にあるデータは簡単に食い違ってしまいます。)
 
-Since `let_it_be` initialize objects in `before(:context)` hooks under the hood, it's affected by this problem: the code might modify models shared between examples (thus causing _shared state leaks_). That could happen unwillingly: when the underlying code under test modifies models, e.g. modifies `updated_at` attribute; or deliberately: when models are updated in `before` hooks or examples themselves instead of creating models in a proper state initially.
+`let_it_be` は内部的に `before(:context)` フックの中でオブジェクトを初期化するので、この問題の影響を受けます。つまり、example の間で共有されているモデルをコードが変更してしまうかもしれません (その結果、_共有状態の持ち越し_ が起こります)。これは意図せずに起こることがあります。たとえば、テスト対象のコードがモデルを変更する場合 (`updated_at` 属性を変更するなど) です。あるいは意図的に起こることもあります。最初から適切な状態でモデルを作る代わりに、`before` フックや example 自体の中でモデルを更新する場合です。
 
-This state leakage comes with potentially harmful side effects on the other examples, such as implicit dependencies and execution order dependency.
+この状態の持ち越しは、暗黙の依存関係や実行順序への依存といった、他の example に対する有害になりうる副作用を伴います。
 
-With many shared models between many examples, it's hard to track down the example and exact place in the code that modifies the model.
+多くの example の間で多くのモデルが共有されていると、モデルを変更している example とコード上の正確な場所を突き止めるのは困難です。
 
-To detect modifications, objects that are passed to `let_it_be` are frozen (with `#freeze`), and `FrozenError` is raised:
+変更を検出するために、`let_it_be` で定義したオブジェクトは (`#freeze` で) フリーズされ、変更しようとすると `FrozenError` が発生します。
 
 ```ruby
-# use freeze: true modifier to enable this feature
+# この機能を有効にするには freeze: true モディファイアを使います
 let_it_be(:user, freeze: true) { create(:user) }
 
-# it is almost equal to
+# これは次のコードとほぼ同等です
 before_all { @user = create(:user).freeze }
 let(:user) { @user }
 ```
 
-To fix the `FrozenError`:
+`FrozenError` を修正するには、次のようにします。
 
-- Add `reload: true`/`refind: true`, it pacifies leakage detection and prevents leakage itself. Typically it's significantly faster to reload the model than to re-create it from scratch before each example (two or even three orders of magnitude faster in some cases).
-- Rewrite the problematic test code.
+- `reload: true`/`refind: true` を追加する。これにより検出のエラーが出なくなり、状態の持ち越しそのものも防げます。通常、各 example の前にモデルをゼロから作り直すよりも、リロードするほうがはるかに高速です (場合によっては 2 桁、あるいは 3 桁も速くなります)。
+- 問題のあるテストコードを書き直す。
 
-This feature is opt-in, since it may find a significant number of leakages in specs that may be a significant burden to fix all at once.
-It's possible to gradually turn it on for parts of specs (e.g., only models) by using:
+この機能はオプトインです。spec の中で相当な数の持ち越しが見つかり、それらを一度にすべて修正するのは大きな負担になりうるからです。
+次のようにすることで、spec の一部 (たとえばモデルだけ) に対して段階的に有効にできます。
 
 ```ruby
 # spec/spec_helper.rb
@@ -263,6 +265,39 @@ RSpec.configure do |config|
 end
 ```
 
-And then tag contexts/examples with `:let_it_be_frost` to enable this feature.
+そのうえで、コンテキストや example に `:let_it_be_frost` タグを付けて、この機能を有効にします。
 
-Alternatively, you can specify `freeze` modifier explicitly (`let_it_be(freeze: true)`) or configure an alias.
+あるいは、`freeze` モディファイアを明示的に指定する (`let_it_be(freeze: true)`) か、エイリアスを設定することもできます。
+
+## 重複のレポート
+
+私たちは `let!` の代わりに `let_it_be` を使うことを提案していますが、重要な違いが 1 つあります。`let!` の定義は同じコンテキストやネストしたコンテキストで上書きでき、その場合は後者だけが呼び出されます。一方、`let_it_be` の定義も上書きできますが、上書きされた側のレコードも作られます。たとえば次のとおりです。
+
+```ruby
+context "A" do
+  let!(:user) { create(:user, name: "a") }
+  let_it_be(:post) { create(:post, title: "A") }
+
+  specify { expect(User.all.pluck(:name)).to eq ["a"] }
+  specify { expect(Post.all.pluck(:title)).to eq ["A"] }
+
+  context "B" do
+    let!(:user) { create(:user, name: "b") }
+    let_it_be(:post) { create(:post, title: "B") }
+
+    specify { expect(User.all.pluck(:name)).to eq ["b"] }
+    specify { expect(Post.all.pluck(:title)).to eq ["B"] } # post が 2 つあるため失敗する
+  end
+end
+```
+
+そこで、let_it_be が上書きされたときの振る舞いを設定できるようにしています。
+
+```ruby
+TestProf::LetItBe.configure do |config|
+  config.report_duplicates = :warn # Rspec.warn_with
+  config.report_duplicates = :raise # Kernel.raise
+end
+```
+
+デフォルトでは、このパラメータは無効になっています。警告を出すか、例外を発生させるかの振る舞いを設定できます。

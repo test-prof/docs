@@ -1,55 +1,55 @@
-# Verbose Logging
+# 詳細なロギング
 
-Sometimes digging through logs is the best way to figure out what's going on.
+何が起きているのかを突き止めるには、ログを掘り返すのが一番よい方法であることがあります。
 
-When you run your test suite, logs are not printed out by default (although written to `test.log` – who cares?).
+テストスイートを実行しても、デフォルトではログは出力されません (`test.log` には書き込まれていますが、誰が気にするでしょうか？)。
 
-We provide a recipe to turn verbose logging for a specific example/group.
+特定の example や group に対して詳細なロギングを有効にするレシピを用意しています。
 
-**NOTE:** Rails only.
+**注意:** Rails のみ。
 
-## Instructions
+## 使い方
 
-Drop this line to your `rails_helper.rb` / `spec_helper.rb` / `test_helper.rb` / whatever:
+`rails_helper.rb` / `spec_helper.rb` / `test_helper.rb` などに、次の 1 行を追加してください。
 
 ```ruby
 require "test_prof/recipes/logging"
 ```
 
-### Log everything
+### すべてをログに出力する
 
-To turn on logging globally use `LOG` env variable:
+ロギングをグローバルに有効にするには、環境変数 `LOG` を使います。
 
 ```sh
-# log everything to stdout
+# すべてを標準出力にログ出力する
 LOG=all rspec ...
 
-# or
+# あるいは
 LOG=all rake test
 
-# log only Active Record statements
+# Active Record のステートメントだけをログ出力する
 LOG=ar rspec ...
 ```
 
-### Per-example logging
+### example ごとのロギング
 
-**NOTE:** RSpec only.
+**注意:** RSpec のみ。
 
-Activate logging by adding special tag – `:log`:
+特別なタグ `:log` を追加して、ロギングを有効にします。
 
 ```ruby
-# Add the tag and you will see a lot of interesting stuff in your console
+# タグを追加すると、コンソールに興味深いものがたくさん表示されます
 it "does smthng weird", :log do
   # ...
 end
 
-# or for the group
+# あるいは、group に対して
 describe "GET #index", :log do
   # ...
 end
 ```
 
-To enable only Active Record log use `log: :ar` tag:
+Active Record のログだけを有効にするには、`log: :ar` タグを使います。
 
 ```ruby
 describe "GET #index", log: :ar do
@@ -57,22 +57,22 @@ describe "GET #index", log: :ar do
 end
 ```
 
-### Logging helpers
+### ロギングのヘルパー
 
-For more granular control you can use `with_logging` (log everything) and
-`with_ar_logging` (log Active Record) helpers:
+より細かく制御するには、`with_logging` (すべてをログ出力する) と
+`with_ar_logging` (Active Record をログ出力する) のヘルパーを使えます。
 
 ```ruby
 it "does somthing" do
   do_smth
-  # show logs only for the code within the block
+  # ブロック内のコードについてのみログを表示する
   with_logging do
     # ...
   end
 end
 ```
 
-**NOTE:** in order to use this helpers with Minitest you should include the `TestProf::Rails::LoggingHelpers` module manually:
+**注意:** これらのヘルパーを Minitest で使うには、`TestProf::Rails::LoggingHelpers` モジュールを手動で include する必要があります。
 
 ```ruby
 class MyLoggingTest < Minitest::Test

@@ -1,10 +1,10 @@
 # TagProf
 
-TagProf is a simple profiler which collects examples statistics grouped by a provided tag value.
+TagProf は、指定されたタグの値ごとに example の統計情報をまとめて収集するシンプルなプロファイラです。
 
-That's pretty useful in conjunction with `rspec-rails` built-in feature – `infer_spec_type_from_file_location!` – which automatically adds `type` to examples metadata.
+これは、`rspec-rails` の組み込み機能である `infer_spec_type_from_file_location!` (example のメタデータに自動的に `type` を追加する機能) と組み合わせるととても便利です。
 
-Example output:
+出力例:
 
 ```sh
 [TEST PROF INFO] TagProf report for type
@@ -16,50 +16,52 @@ Example output:
       model     00:01.127      40   32.26   12.82     00:00.028
 ```
 
-It shows both the total number of examples in each group and the total time spent (as long as percentages and average values).
+各グループの example の総数と、費やされた合計時間の両方が表示されます (割合と平均値も表示されます)。
 
-You can also generate an interactive HTML report:
+インタラクティブな HTML レポートを生成することもできます:
 
 ```sh
 TAG_PROF=type TAG_PROF_FORMAT=html bundle exec rspec
 ```
 
-That's how a report looks like:
+レポートは次のように表示されます:
 
-![TagProf UI](/assets/tag-prof.gif)
+<img alt="TagProf UI" data-origin="/assets/tag-prof.gif" src="/assets/tag-prof.gif">
 
-## Instructions
+## 使い方
 
-TagProf can be used with both RSpec and Minitest (limited support, see  below).
+TagProf は RSpec と Minitest の両方で使用できます (Minitest は限定的なサポートです。下記を参照してください)。
 
-To activate TagProf use `TAG_PROF` environment variable:
+TagProf を有効にするには、環境変数 `TAG_PROF` を使用します:
 
-With Rspec:
+RSpec の場合:
 
 ```sh
-# Group by type
+# type でグループ化する
 TAG_PROF=type rspec
 ```
 
-With Minitest:
+Minitest の場合\*:
 
 ```sh
-# using pure ruby
+# 素の ruby を使う場合
 TAG_PROF=type ruby
 
-# using Rails built-in task
+# Rails の組み込みタスクを使う場合
 TAG_PROF=type bin/rails test
 ```
 
-NB: if another value than "type" is used for TAG_PROF environment variable it will be ignored silently in both Minitest and RSpec.
+注: 環境変数 TAG_PROF に "type" 以外の値を指定した場合、Minitest と RSpec のどちらでも、何も表示されずに無視されます。
 
-### Usage specificity with Minitest
+\* Minitest 6 以降では、まずテストヘルパーに `Minitest.load :test_prof` を追加して、TestProf プラグインを有効にする必要があります。
 
-Minitest does not support the usage of tags by default. TagProf therefore groups statistics by direct subdirectories of the root test directory. It assumes root test directory is named either `spec` or `test`.
+### Minitest での使い方の違い
 
-When no root test directory can be found the test statistics will not be grouped with other tests. They will be displayed per test with a significant warning message in the report.
+Minitest はデフォルトではタグの使用をサポートしていません。そのため TagProf は、テストのルートディレクトリ直下のサブディレクトリごとに統計情報をグループ化します。テストのルートディレクトリの名前は `spec` か `test` のいずれかであることを前提としています。
 
-Example:
+テストのルートディレクトリが見つからない場合、そのテストの統計情報は他のテストとグループ化されません。その場合、レポートに目立つ警告メッセージが出たうえで、テストごとに表示されます。
+
+例:
 
 ```sh
 [TEST PROF INFO] TagProf report for type
@@ -71,15 +73,15 @@ __unknown__     00:04.808           00:01.402     42   33.87   54.70     00:00.1
       model     00:01.127           00:00.446     40   32.26   12.82     00:00.028
 ```
 
-## Profiling events
+## イベントのプロファイリング
 
-You can combine TagProf with [EventProf](./event_prof.md) to track not only the total time spent but also the time spent for the specified activities (through events):
+TagProf を [EventProf](./event_prof.md) と組み合わせると、費やされた合計時間だけでなく、(イベントを通じて) 指定したアクティビティに費やされた時間も追跡できます:
 
 ```
 TAG_PROF=type TAG_PROF_EVENT=sql.active_record rspec
 ```
 
-Example output:
+出力例:
 
 ```sh
 [TEST PROF INFO] TagProf report for type
@@ -91,20 +93,20 @@ Example output:
       model     00:01.127           00:00.446     40   32.26   12.82     00:00.028
 ```
 
-Multiple events are also supported (comma-separated).
+複数のイベントにも対応しています (カンマ区切りで指定します)。
 
-## Pro-Tip: More Types
+## 上級者向けのヒント: type を増やす
 
-By default, RSpec only infers types for default Rails app entities (such as controllers, models, mailers, etc.).
-Modern Rails applications typically contain other abstractions too (e.g. services, forms, presenters, etc.), but RSpec is not aware of them and doesn't add any metadata.
+デフォルトでは、RSpec は Rails アプリケーションの標準的な構成要素 (コントローラ、モデル、メーラーなど) についてのみ type を推測します。
+最近の Rails アプリケーションには、たいていそれ以外の抽象化 (サービス、フォーム、プレゼンターなど) も含まれていますが、RSpec はそれらを認識せず、メタデータを追加しません。
 
-That's the quick workaround:
+手軽な回避策は次のとおりです:
 
 ```ruby
 RSpec.configure do |config|
   # ...
   config.define_derived_metadata(file_path: %r{/spec/}) do |metadata|
-    # do not overwrite type if it's already set
+    # type がすでに設定されている場合は上書きしない
     next if metadata.key?(:type)
 
     match = metadata[:location].match(%r{/spec/([^/]+)/})

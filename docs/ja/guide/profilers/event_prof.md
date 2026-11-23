@@ -1,10 +1,10 @@
 # EventProf
 
-EventProf collects instrumentation (such as ActiveSupport::Notifications) metrics during your test suite run.
+EventProf は、テストスイートの実行中に、計測の仕組み (ActiveSupport::Notifications など) から得られるメトリクスを収集します。
 
-It works very similar to `rspec --profile` but can track arbitrary events.
+`rspec --profile` とよく似た動きをしますが、任意のイベントを追跡できます。
 
-Example output:
+出力例:
 
 ```sh
 [TEST PROF INFO] EventProf results for sql.active_record
@@ -28,22 +28,22 @@ fails (./spec/shared_examples/controllers/invalid_examples.rb:3) – 00:00.007 (
 
 ```
 
-## Instructions
+## 使い方
 
-Currently, EventProf supports only ActiveSupport::Notifications
+現在、EventProf がサポートしているのは ActiveSupport::Notifications のみです。
 
-To activate EventProf with:
+EventProf を有効にする方法は次のとおりです。
 
 ### RSpec
 
-Use `EVENT_PROF` environment variable set to event name:
+環境変数 `EVENT_PROF` にイベント名を指定します。
 
 ```sh
-# Collect SQL queries stats for every suite and example
+# すべてのスイートと example について SQL クエリの統計を収集する
 EVENT_PROF='sql.active_record' rspec ...
 ```
 
-You can track multiple events simultaneously:
+複数のイベントを同時に追跡することもできます。
 
 ```sh
 EVENT_PROF='sql.active_record,perform.active_job' rspec ...
@@ -51,50 +51,46 @@ EVENT_PROF='sql.active_record,perform.active_job' rspec ...
 
 ### Minitest
 
-Use `EVENT_PROF` environment variable set to event name:
+Minitest 6 以降では、まずテストヘルパーに `Minitest.load :test_prof` を追加して、TestProf プラグインを有効にする必要があります。
+
+環境変数 `EVENT_PROF` にイベント名を指定します。
 
 ```sh
-# Collect SQL queries stats for every suite and example
+# すべてのスイートと example について SQL クエリの統計を収集する
 EVENT_PROF='sql.active_record' rake test
 ```
 
-or use CLI options as well:
+CLI オプションを使うこともできます。
 
 ```sh
-# Run a specific file using CLI option
+# CLI オプションを使って特定のファイルを実行する
 ruby test/my_super_test.rb --event-prof=sql.active_record
 
-# Show the list of possible options:
+# 使用できるオプションの一覧を表示する
 ruby test/my_super_test.rb --help
 ```
 
-### Using with Minitest::Reporters
+### Minitest::Reporters と併用する
 
-If you're using `Minitest::Reporters` in your project you have to explicitly declare it
-in your test helper file:
+プロジェクトで `Minitest::Reporters` を使用している場合は、テストヘルパーのファイルで明示的に宣言する必要があります。
 
 ```sh
 require 'minitest/reporters'
 Minitest::Reporters.use! [YOUR_FAVORITE_REPORTERS]
 ```
 
-#### NOTICE
+#### 注意事項
 
-When you have `minitest-reporters` installed as a gem but not declared in your `Gemfile`
-make sure to always prepend your test run command with `bundle exec` (but we sure that you always do it).
-Otherwise, you'll get an error caused by Minitest plugin system, which scans all the entries in the
-`$LOAD_PATH` for any `minitest/*_plugin.rb`, thus initialization of `minitest-reporters` plugin which is
-available in that case doesn't happens correctly.
+`minitest-reporters` が gem としてインストールされているものの `Gemfile` には宣言されていない場合は、テストの実行コマンドの前に必ず `bundle exec` を付けてください (いつもそうしているとは思いますが)。
+そうしないと、Minitest のプラグインシステムが原因でエラーになります。このシステムは `$LOAD_PATH` 内のすべてのエントリから `minitest/*_plugin.rb` を探すため、その場合に利用可能となる `minitest-reporters` プラグインの初期化が正しく行われません。
 
-See [Rails guides](http://guides.rubyonrails.org/active_support_instrumentation.html)
-for the list of available events if you're using Rails.
+Rails を使用している場合、利用できるイベントの一覧は [Rails ガイド](http://guides.rubyonrails.org/active_support_instrumentation.html) を参照してください。
 
-If you're using [rom-rb](http://rom-rb.org) you might be interested in profiling `'sql.rom'` event.
+[rom-rb](http://rom-rb.org) を使用している場合は、`'sql.rom'` イベントのプロファイリングが役に立つかもしれません。
 
-## Configuration
+## 設定
 
-By default, EventProf collects information only about top-level groups (aka suites),
-but you can also profile individual examples. Just set the configuration option:
+デフォルトでは、EventProf はトップレベルのグループ (いわゆるスイート) についての情報のみを収集しますが、個々の example をプロファイリングすることもできます。次の設定オプションを指定するだけです。
 
 ```ruby
 TestProf::EventProf.configure do |config|
@@ -102,37 +98,52 @@ TestProf::EventProf.configure do |config|
 end
 ```
 
-Or provide the `EVENT_PROF_EXAMPLES=1` env variable.
+あるいは、環境変数 `EVENT_PROF_EXAMPLES=1` を指定します。
 
-Another useful configuration parameter – `rank_by`. It's responsible for sorting stats –
-either by the time spent in the event or by the number of occurrences:
+もうひとつの便利な設定パラメータが `rank_by` です。これは統計の並び順を決めるもので、イベントに費やした時間、または発生回数のどちらかで並べ替えます。
 
 ```sh
 EVENT_PROF_RANK=count EVENT_PROF='instantiation.active_record' be rspec
 ```
 
-See [event_prof.rb](https://github.com/test-prof/test-prof/tree/master/lib/test_prof/event_prof.rb) for all available configuration options and their usage.
+## フォーマット
 
-## Using with RSpecStamp
+デフォルトでは、EventProf は結果を標準出力に表示します。環境変数 `EVENT_PROF_FORMAT` (または `config.format`) を設定すると、JSON として出力することもできます。
 
-EventProf can be used with [RSpec Stamp](../recipes/rspec_stamp.md) to automatically mark _slow_ examples with custom tags. For example:
+```sh
+EVENT_PROF='sql.active_record' EVENT_PROF_FORMAT=json rspec ...
+```
+
+JSON の成果物は `tmp/test_prof/event-prof.json` に書き出されます (パスはグローバルの `output_dir` オプションで変更できます)。
+
+Minitest では、対応する CLI オプションを使用できます。
+
+```sh
+ruby test/my_super_test.rb --event-prof=sql.active_record --event-prof-format=json
+```
+
+利用できるすべての設定オプションとその使い方については、[event_prof.rb](https://github.com/test-prof/test-prof/tree/master/lib/test_prof/event_prof.rb) を参照してください。
+
+## RSpecStamp と併用する
+
+EventProf を [RSpec Stamp](../recipes/rspec_stamp.md) と併用すると、_遅い_ example にカスタムタグを自動で付けることができます。たとえば次のようにします。
 
 ```sh
 EVENT_PROF="sql.active_record" EVENT_PROF_STAMP="slow:sql" rspec ...
 ```
 
-After running the command above the slowest example groups (and examples if configured) would be marked with the `slow: :sql` tag.
+上のコマンドを実行すると、最も遅い example group (設定していれば example も) に `slow: :sql` タグが付きます。
 
-## Custom Instrumentation
+## カスタムの計測
 
-To use EventProf with your instrumentation engine just complete the two following steps:
+EventProf を独自の計測エンジンと一緒に使うには、次の 2 つの手順を行うだけです。
 
-- Add a wrapper for your instrumentation:
+- 計測のラッパーを追加します。
 
 ```ruby
-# Wrapper over your instrumentation
+# 独自の計測に対するラッパー
 module MyEventsWrapper
-  # Should contain the only one method
+  # メソッドはこの 1 つだけを持つこと
   def self.subscribe(event)
     raise ArgumentError, "Block is required!" unless block_given?
 
@@ -143,7 +154,7 @@ module MyEventsWrapper
 end
 ```
 
-- Set instrumenter in the config:
+- 設定で instrumenter を指定します。
 
 ```ruby
 TestProf::EventProf.configure do |config|
@@ -151,73 +162,93 @@ TestProf::EventProf.configure do |config|
 end
 ```
 
-## Custom Events
+## カスタムイベント
 
 ### `"factory.create"`
 
-FactoryGirl provides its own instrumentation ('factory_girl.run_factory'); but there is a caveat – it fires an event every time a factory is used, even when we use factory for nested associations. Thus it's not possible to calculate the total time spent in factories due to the double calculation.
+FactoryBot は独自の計測 ('factory_bot.run_factory') を提供していますが、注意点があります。ネストした関連のためにファクトリを使う場合も含め、ファクトリが使われるたびにイベントが発火するのです。そのため二重に計上されてしまい、ファクトリに費やした合計時間を算出できません。
 
-EventProf comes with a little patch for FactoryGirl which provides instrumentation only for top-level `FactoryGirl.create` calls. It is loaded automatically if you use `"factory.create"` event:
+EventProf には FactoryBot 向けの小さなパッチが付属しており、トップレベルの `FactoryBot.create` の呼び出しだけを計測します。`"factory.create"` イベントを使うと自動で読み込まれます。
 
 ```sh
 EVENT_PROF=factory.create bundle exec rspec
 ```
 
-Also supports Fabrication (tracks implicit and explicit `Fabricate.create` calls).
+Fabrication もサポートしています (暗黙的・明示的な `Fabricate.create` の呼び出しを追跡します)。
 
 ### `"sidekiq.jobs"`
 
-Collects statistics about Sidekiq jobs that have been run inline:
+インラインで実行された Sidekiq ジョブの統計を収集します。
 
 ```sh
 EVENT_PROF=sidekiq.jobs bundle exec rspec
 ```
 
-**NOTE**: automatically sets `rank_by` to `count` ('cause it doesn't make sense to collect the information about time spent – see below).
+**注意**: `rank_by` は自動的に `count` に設定されます (費やした時間の情報を集めても意味がないためです。下記を参照してください)。
 
 ### `"sidekiq.inline"`
 
-Collects statistics about Sidekiq jobs that have been run inline (excluding nested jobs):
+インラインで実行された Sidekiq ジョブの統計を収集します (ネストしたジョブは除きます)。
 
 ```sh
 EVENT_PROF=sidekiq.inline bundle exec rspec
 ```
 
-Use this event to profile the time spent running Sidekiq jobs.
+Sidekiq ジョブの実行に費やした時間をプロファイリングするには、このイベントを使用してください。
 
-## Profile arbitrary methods
+### `"callback.run"`
 
-You can also add your custom events to profile specific methods (for example, after figuring out some hot calls with [RubyProf](./ruby_prof.md) or [StackProf](./stack_prof.md)).
+[ActiveSupport のコールバック](https://api.rubyonrails.org/classes/ActiveSupport/Callbacks.html) の呼び出し (`before`/`after`) の統計を収集します。
 
-For example, having a class doing some heavy work:
+```sh
+EVENT_PROF=callback.run bundle exec rspec
+```
+
+`ActiveSupport::Callbacks` が読み込まれている必要があります (Rails 経由、または `require "active_support/callbacks"` など)。
+
+レポートにはコールバックごとの内訳が含まれ、それぞれの時間と呼び出し回数が表示されます (`kind_name filter (Owner)`)。各コールバックイベントは `{label: "..."}` という形式のペイロードを持ち、イベントはそのラベルごとにまとめられます。
+
+```
+  before_save normalize (Order) → 00:00.012 (42)
+  after_save audit (Order) → 00:00.008 (42)
+```
+
+**注意:** 追跡されるのは `before` と `after` のコールバックのみです。`around` コールバックは計測されません。
+
+## 任意のメソッドをプロファイリングする
+
+特定のメソッドをプロファイリングするために、独自のカスタムイベントを追加することもできます (たとえば、[RubyProf](./ruby_prof.md) や [StackProf](./stack_prof.md) でボトルネックになっている呼び出しを突き止めた後など)。
+
+たとえば、重い処理を行うクラスがあるとします。
 
 ```ruby
 class Work
   def do_smth(*args)
-    # do something
+    # 何らかの処理を行う
   end
 end
 ```
 
-You can profile it by adding a _monitor_:
+_モニター_ を追加することでプロファイリングできます。
 
 ```ruby
-# provide a class, event name and methods to monitor
+# クラス、イベント名、監視するメソッドを指定する
 TestProf::EventProf.monitor(Work, "my.work", :do_smth)
 ```
 
-And then run EventProf as usual:
+あとは、いつもどおり EventProf を実行します。
 
 ```sh
 EVENT_PROF=my.work bundle exec rake test
 ```
 
-You can also provide additional options:
+追加のオプションを指定することもできます。
 
-- `top_level: true | false` (defaults to `false`): defines whether you want to take into account only top-level invocations and ignore nested triggers of this event (that's how "factory.create" is [implemented](https://github.com/test-prof/test-prof/blob/master/lib/test_prof/event_prof/custom_events/factory_create.rb))
-- `guard: Proc` (defaults to `nil`): provide a Proc which could prevent from triggering an event: the method is instrumented only if `guard` returns `true`; `guard` is executed using `instance_exec` and the method arguments are passed to it.
+- `top_level: true | false` (デフォルトは `false`): トップレベルの呼び出しだけを対象とし、このイベントのネストした発火を無視するかどうかを指定します ("factory.create" はこの方法で[実装](https://github.com/test-prof/test-prof/blob/master/lib/test_prof/event_prof/custom_events/factory_create.rb)されています)
+- `guard: Proc` (デフォルトは `nil`): イベントの発火を抑止できる Proc を指定します。`guard` が `true` を返した場合にのみメソッドが計測されます。`guard` は `instance_exec` で実行され、メソッドの引数が渡されます。
+- `payload: Proc` (デフォルトは `nil`): `Hash` を返す Proc を指定すると、各イベントにペイロードを付与できます (`ActiveSupport::Notifications` のペイロードとしてそのまま渡されます)。Hash に `:label` キーが含まれている場合、同じラベルを持つイベントが内訳として集計されます ([`"callback.run"`](#callbackrun) を参照)。Proc は `instance_exec` で評価され、メソッドの引数が渡されます。
 
-For example:
+たとえば次のようにします。
 
 ```ruby
 TestProf::EventProf.monitor(
@@ -229,16 +260,15 @@ TestProf::EventProf.monitor(
 )
 ```
 
-You can add monitors _on demand_ (i.e. only when you want to track the specified event) by wrapping
-the code in `TestProf::EventProf::CustomEvents.register` method:
+コードを `TestProf::EventProf::CustomEvents.register` メソッドで囲むと、モニターを _必要なときだけ_ (つまり、指定したイベントを追跡したいときにのみ) 追加できます。
 
 ```ruby
 TestProf::EventProf::CustomEvents.register("my.work") do
   TestProf::EventProf.monitor(Work, "my.work", :do_smth)
 end
 
-# Then call `activate_all` with the provided event
+# その後、指定されたイベントを渡して `activate_all` を呼び出す
 TestProf::EventProf::CustomEvents.activate_all(TestProf::EventProf.config.event)
 ```
 
-The block is evaluated only if the specified event is enabled with EventProf.
+このブロックは、指定したイベントが EventProf で有効になっている場合にのみ評価されます。

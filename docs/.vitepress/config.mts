@@ -92,15 +92,16 @@ const jaGuideSidebar = [
     ]
   },
   {
-    text: 'プロファイラー',
+    text: 'プロファイラ',
     items: [
-      { text: 'Ruby プロファイラー', link: '/ja/guide/profilers/ruby_profilers' },
+      { text: 'Ruby プロファイラ', link: '/ja/guide/profilers/ruby_profilers' },
       { text: 'Event Profiler', link: '/ja/guide/profilers/event_prof' },
       { text: 'Tag Profiler', link: '/ja/guide/profilers/tag_prof' },
       { text: 'Factory Doctor', link: '/ja/guide/profilers/factory_doctor' },
       { text: 'Factory Profiler', link: '/ja/guide/profilers/factory_prof' },
       { text: 'RSpecDissect Profiler', link: '/ja/guide/profilers/rspec_dissect' },
       { text: 'Memory Profiler', link: '/ja/guide/profilers/memory_prof' },
+      { text: 'TPS Profiler', link: '/ja/guide/profilers/tps_prof' },
     ]
   },
   {

@@ -1,36 +1,36 @@
-# Tests Sampling
+# テストのサンプリング
 
-Sometimes it's useful to run profilers against randomly chosen tests. Unfortunately, test frameworks don't support such functionality. That's why we've included small patches for RSpec and Minitest in TestProf.
+ランダムに選んだテストに対してプロファイラを実行すると役に立つことがあります。残念ながら、テストフレームワークはそのような機能をサポートしていません。そこで、RSpec と Minitest のための小さなパッチを TestProf に含めました。
 
-## Instructions
+## 使い方
 
-Require the corresponding patch:
+対応するパッチを require してください。
 
 ```ruby
-# For RSpec in your spec_helper.rb
+# RSpec の場合は spec_helper.rb に
 require "test_prof/recipes/rspec/sample"
 
-# For Minitest in your test_helper.rb
+# Minitest の場合は test_helper.rb に
 require "test_prof/recipes/minitest/sample"
 ```
 
-And then just add `SAMPLE` env variable with the number examples you want to run:
+そして、実行したい example の数を環境変数 `SAMPLE` に指定するだけです。
 
 ```sh
 SAMPLE=10 rspec
 ```
 
-You can also run random set of example groups (or suites) using `SAMPLE_GROUPS` variable:
+`SAMPLE_GROUPS` 変数を使って、example group (またはスイート) をランダムに選んで実行することもできます。
 
 ```sh
 SAMPLE_GROUPS=10 rspec
 ```
 
-Note that you can use tests sampling with RSpec filters:
+テストのサンプリングは、RSpec のフィルタと一緒に使えることも覚えておいてください。
 
 ```sh
 SAMPLE=10 rspec --tag=api
 SAMPLE_GROUPS=10 rspec -e api
 ```
 
-That's it. Enjoy!
+これだけです。お楽しみください！

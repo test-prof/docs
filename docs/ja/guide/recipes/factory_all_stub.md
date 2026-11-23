@@ -1,28 +1,28 @@
 # FactoryAllStub
 
-_Factory All Stub_ is a spell to force FactoryBot/FactoryGirl use only `build_stubbed` strategy (even if you call `create` or `build`).
+_Factory All Stub_ は、(`create` や `build` を呼び出した場合でも) FactoryBot に `build_stubbed` ストラテジーだけを使わせる呪文です。
 
-The idea behind it is to quickly fix [Factory Doctor](../profilers/factory_doctor.md) offenses (and even do that automatically).
+その背景にある考えは、[Factory Doctor](../profilers/factory_doctor.md) が検出した違反を素早く修正する (さらには自動で修正する) ことです。
 
-**NOTE**. Only works with FactoryGirl/FactoryBot. Should be considered only as a temporary specs fix.
+**注意**. FactoryBot でのみ動作します。あくまで spec の一時的な修正として考えてください。
 
-## Instructions
+## 使い方
 
-First, you have to initialize `FactoryAllStub`:
+まず、`FactoryAllStub` を初期化する必要があります。
 
 ```ruby
 TestProf::FactoryAllStub.init
 ```
 
-The initialization process injects custom logic into FactoryBot generator.
+この初期化処理は、FactoryBot のジェネレータに独自のロジックを注入します。
 
-To enable _all-stub_ mode:
+_all-stub_ モードを有効にするには次のようにします。
 
 ```ruby
 TestProf::FactoryAllStub.enable!
 ```
 
-To disable _all-stub_ mode and use factories as always:
+_all-stub_ モードを無効にして、いつもどおりファクトリを使うには次のようにします。
 
 ```ruby
 TestProf::FactoryAllStub.disable!
@@ -30,29 +30,29 @@ TestProf::FactoryAllStub.disable!
 
 ## RSpec
 
-In your `spec_helper.rb` (or `rails_helper.rb` if any):
+`spec_helper.rb` (`rails_helper.rb` がある場合はそちら) に次の記述を追加してください。
 
 ```ruby
 require "test_prof/recipes/rspec/factory_all_stub"
 ```
 
-That would automatically initialize `FactoryAllStub` (no need to call `.init`) and provide
-`"factory:stub"` shared context with enables it for the marked examples or example groups:
+これにより `FactoryAllStub` が自動的に初期化され (`.init` を呼び出す必要はありません)、
+印を付けた example や example group でこのモードを有効にする `"factory:stub"` shared context が提供されます。
 
 ```ruby
 describe "User" do
   let(:user) { create(:user) }
 
   it "is valid", factory: :stub do
-    # use `build_stubbed` instead of `create`
+    # `create` の代わりに `build_stubbed` を使う
     expect(user).to be_valid
   end
 end
 ```
 
-`FactoryAllStub` was designed to be used with `FactoryDoctor` the following way:
+`FactoryAllStub` は、次のように `FactoryDoctor` と組み合わせて使うことを想定して設計されています。
 
 ```sh
-# Run FactoryDoctor and mark all offensive examples with factory:stub
+# FactoryDoctor を実行し、違反しているすべての example に factory:stub の印を付ける
 FDOC=1 FDOC_STAMP=factory:stub rspec ./spec/models
 ```

@@ -2,6 +2,9 @@ import { defineConfig } from 'vitepress'
 import llmstxt from 'vitepress-plugin-llms'
 import { availableSinceMarkdownPlugin } from './availableSinceMarkdownPlugin'
 
+const hopping = (text: string) =>
+  [...text].map((letter, i) => (letter === ' ' ? '<span class="gap"></span>' : `<span style="--i: ${i}">${letter}</span>`)).join('')
+
 const guideSidebar = [
   {
     text: 'Getting Started',
@@ -206,7 +209,7 @@ export default defineConfig({
         nav: [
           { text: 'Guide', link: '/guide/getting_started', activeMatch: '/guide/' },
           { text: 'LLMs', link: '/llms-full.txt' },
-          { text: 'TestPro<span class="nav-soon"><span>S</span><span>o</span><span>o</span><span>n</span></span>', link: '/pro' },
+          { text: `TestPro<span class="nav-stamp">${hopping('New')}</span>`, link: '/pro' },
         ],
         sidebar: {
           '/guide/': guideSidebar,

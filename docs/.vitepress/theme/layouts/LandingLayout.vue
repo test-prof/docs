@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useData } from 'vitepress'
 
 const { frontmatter, lang } = useData()
@@ -9,6 +9,13 @@ const t = (key: string, fallback: string) => {
 }
 
 const prefix = computed(() => lang.value === 'en' ? '' : `/${lang.value}`)
+
+// Same cyber week deadline as the TestPro page: end of 11 Dec 2026, Pacific time.
+const PROMO_ENDS_AT = Date.parse('2026-12-12T08:00:00Z')
+const promoActive = ref(Date.now() < PROMO_ENDS_AT)
+onMounted(() => {
+  promoActive.value = Date.now() < PROMO_ENDS_AT
+})
 </script>
 
 <template>
@@ -39,6 +46,38 @@ const prefix = computed(() => lang.value === 'en' ? '' : `/${lang.value}`)
             GitHub
           </a>
         </div>
+      </div>
+    </section>
+
+    <!-- TestPro preview -->
+    <section v-if="lang === 'en'" class="pro-preview">
+      <div class="pro-card">
+        <div class="pro-text">
+          <p class="pro-eyebrow">New: TestPro</p>
+          <h2>Make your Rails tests twice as fast with the agent you already use</h2>
+          <p>
+            Your coding agents run your tests 3 to 10 times per task. TestPro gives Claude Code, Codex or Cursor our catalog of slow-test causes and measures every fix, so the suite gets faster and stays green.
+          </p>
+          <div class="pro-actions">
+            <a class="btn btn-alt" href="/pro">See TestPro</a>
+            <a class="btn btn-alt" href="/pro#pricing">Pricing</a>
+          </div>
+          <p v-if="promoActive" class="pro-promo"><strong>Launch price:</strong> half off your first year if you buy by December 11.</p>
+        </div>
+        <dl class="pro-stats">
+          <div>
+            <dt>Median speed-up</dt>
+            <dd>2.4x <span>vs 1.8x with TestProf alone</span></dd>
+          </div>
+          <div>
+            <dt>Rails apps where TestPro wins</dt>
+            <dd>11 of 12</dd>
+          </div>
+          <div>
+            <dt>Starts at</dt>
+            <dd>$395 <span>a year</span></dd>
+          </div>
+        </dl>
       </div>
     </section>
 
@@ -154,8 +193,16 @@ const prefix = computed(() => lang.value === 'en' ? '' : `/${lang.value}`)
         <p class="footer-badge">
           <a href="https://evilmartians.com/?utm_source=test-prof" target="_blank" rel="noopener">
             <img
-              src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg"
-              alt="Sponsored by Evil Martians"
+              class="badge-light"
+              src="https://evilmartians.com/badges/sponsored-by-evil-martians_v2.0.svg"
+              alt="Built by Evil Martians"
+              width="236"
+              height="54"
+            />
+            <img
+              class="badge-dark"
+              src="https://evilmartians.com/badges/sponsored-by-evil-martians_v2.0_for-dark-bg.svg"
+              alt="Built by Evil Martians"
               width="236"
               height="54"
             />
@@ -234,12 +281,12 @@ const prefix = computed(() => lang.value === 'en' ? '' : `/${lang.value}`)
 }
 
 .btn-brand {
-  background-color: var(--vp-c-brand-3);
-  color: var(--vp-c-white);
+  background-color: var(--vp-button-brand-bg);
+  color: var(--vp-button-brand-text);
 }
 
 .btn-brand:hover {
-  background-color: var(--vp-c-brand-1);
+  background-color: var(--vp-button-brand-hover-bg);
 }
 
 .btn-alt {
@@ -512,4 +559,107 @@ const prefix = computed(() => lang.value === 'en' ? '' : `/${lang.value}`)
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* TestPro preview */
+.pro-preview {
+  padding: 0 24px 56px;
+}
+
+.pro-card {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 32px;
+  align-items: center;
+  padding: 32px;
+  border: 1px solid var(--vp-c-brand-soft);
+  border-radius: 16px;
+  background-color: var(--vp-c-bg);
+}
+
+.pro-eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-3);
+}
+
+.pro-text h2 {
+  margin: 6px 0 10px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.pro-text p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+.pro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.pro-text .pro-promo {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: var(--vp-c-brand-3);
+}
+
+.pro-stats {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0 0 0 32px;
+  border-left: 1px solid var(--vp-c-divider);
+}
+
+.pro-stats dt {
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
+}
+
+.pro-stats dd {
+  margin: 2px 0 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pro-stats dd span {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--vp-c-text-2);
+}
+
+@media (max-width: 768px) {
+  .pro-card {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+
+  .pro-stats {
+    padding: 24px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--vp-c-divider);
+  }
+}
+
+.badge-dark,
+.dark .badge-light {
+  display: none;
+}
+
+.dark .badge-dark {
+  display: inline;
+}
+
+
 </style>
